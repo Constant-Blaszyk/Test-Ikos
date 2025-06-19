@@ -1,0 +1,26 @@
+﻿"Module";"Formation";"Description";"Prérequis";"Date";"Type";"Système";"Statut";"Référence";"Commentaires"
+"Date du patch cumulatif";"Numéro de patch cumulatif";"Patch";"Module";"Nom du 
+traitement ou de la page";"Description";"Destinataire 
+(Exploitant, 
+Utilisateur)";"Référence
+dossier 
+client";"Référence dossier
+Sopra
+Steria";"Techno"
+"2025-05-07 11:41:59.216000";"034";"P4cf7f44";"CCL";"";"saisie/modification du référence engagement
+Contexte: Quand on modifiait un compte client, on ne pouvait pas modifier la référence d'engagement et le numéro sans cocher la case CPP.
+Correction effectuée: Dorénavant on peut modifier la référence d'engagement et le numéro unique sans cocher la case CPP.";"Utilisateur";"";"I24_042478";"Java"
+"2025-05-07 11:41:59.216000";"034";"Pb3c370d";"COX";"COX145EJ";"Arrêt de procédure
+Contexte: Une procédure ne peut pas être arrêtée si un accord de règlements est en cours.
+Correction effectuée: Une procédure peut de nouveau être arrêtée même si un accord de règlements est en cours.";"Utilisateur";"I2504_00700";"I25_017592
+I25_016263";"Java"
+"2025-04-30 00:00:00";"033";"P10985842";"GEN";"";"Traitement GENAES - éditions massives sur imprimante
+Contexte: Lors du lancement du traitement GENAES, des éditions sortent en masse sur l'imprimante..
+Correction effectuée: Suppression de la sortie sur imprimante lors de l'appel du java.";"Exploitant et Utilisateur";"";"I25_016081";"IBM i"
+"2025-04-30 00:00:00";"033";"P10979142";"GPD";"OCLEXP";"GMBI loyer
+Ajout du critère 8 sur le traitement OCLEXP pour le code état tarif commercial.";"Exploitant et Utilisateur";"";"";"IBM i"
+"2025-04-30 00:00:00";"033";"P672af91";"PTM";"";"Evolution GMBI 2025 - loyer
+livraison de l’évolution GMBI (traitement OCLEXP) pour déterminer le montant des loyers et de la date de loyer";"Exploitant et Utilisateur";"";"";"Java"
+"2025-04-22 00:00:00";"032";"Pcf4b4d3";"GDR";"";"Affichage d'un lien voulez-vous gestion des réserves
+Contexte: Quand on ouvrait la synthèse d'une visite réalisée, le lien voulez-vous ""importer des réserves"" ne s'affichait pas.
+Correction effectuée: Le lien s'affiche dorénavant";"Exploitant et Utilisateur";"";"";"Java"

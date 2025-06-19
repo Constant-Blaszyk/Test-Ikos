@@ -1,0 +1,66 @@
+﻿"Module";"Formation";"Description";"Prérequis";"Date";"Type";"Système";"Statut";"Référence"
+"CMD970";"> accès commande Approvisionnement + accès imputations";"Pas d'entrée spécifique : simple recherche sur le Type commande 'Cde d'approvisionnement' en supprimant le filtre sur la personne qui engage";"";"";"EDU";"ok";"EVOLVE CHM";"Commande K20914 + ajout lignes commande depuis l'action enregistrement"
+"";"> accès commande sur Patrimoine (Entretien Courant) + accès imputations";"Pas d'entrée spécifique : simple recherche sur le Type commande 'Entretien courant' en supprimant le filtre sur la personne qui engage";"";"";"EDU";"ok";"EVOLVE CHM";"Commande K20911 + de 10 lignes => ajout ligne commande MG1004 depuis l'action enregistrement"
+"";"> test réédition bon de commande";"Pas d'entrée spécifique";"";"";"EDU";"ok";"EVOLVE CHM";"Commande K20897 : envoi par mail avec destinataire en CC"
+"";"> test modification commande d'investissement et contrôle de la budgétaire en GOP";"Pas d'entrée spécifique : simple recherche sur le Type commande 'Réhabilitations' en supprimant le filtre sur la personne qui engage";"";"";"EDU";"ok";"EVOLVE CHM";"K20900, Via l'étape Modification Commande : 
+- sur le POT 0199-14-02 (HON), réduction du montant de  15 000 à 10000
+- sur le POT 0199-15-02 (HON), ajout d'un ligne à 2000"
+"";"";"Pas d'entrée spécifique : simple recherche sur le Type commande 'Réhabilitations' en supprimant le filtre sur la personne qui engage";"";"";"EDU";"ok";"EVOLVE CHM";"K15004 , Via l'étape Réception Travaux : 
+- sur le POT 0238-18-01 (TCE), ajout d'une ligne à 10"
+"CMD968";"> création commande Approvisionnement pour M03 MCS Lallaing";"Engagé par : TEIXERAJE (TEIXERA Jérôme)
+N° magasin : M03 (MCS Lallaing)
+Fournisseur : ETABLISSEMENTS LE LOARER (Tiers N° 000012263)
+Marché : 049444 HDA 002, ou tout autre marché avec dispo suffisant (>= 210.95 HT ou 253.14 TTC)
+Organisation : 0001 0302 07 03
+Type de commande : Cde d'approvisionnement 
+Prestations : 
+102022 ENSEMBLE MEUBLE VASQUE, Qté : 1
+102023 VASQUE SEULE, Qté : 1";"K20919";"";"EDU";"ok";"EVOLVE CHM";"Marché 053665"
+"";"> création commande type bénéficiaire Organisation";"Engagé par DUBOIS Valérie
+HO bénéficiaire 0001 0403 01 01,
+Marché 050834/HDA/0001 ou tout autre marché avec un minimum de disponible
+Fournisseur : remonte automatiquement par rapport au marché sélectionné
+Type de commande : Dépenses informatiques
+Nature : Investissement informatique
+Corps d'état : suivant le marché sélectionné
+Qté  et Prix : peu importe";"K20920";"";"EDU";"ok";"EVOLVE CHM";""
+"";"> création commande sur Patrimoine (Entretien Courant) avec 10 lignes ***";"Engagé par : AUDEGOND Lorie (ou autre CCP sur 0001-0304-05-02)
+Bénéficiaire : Parties privatives, lot, UG 150140 
+Type de commande : Entretien courant 
+Nature : Logement
+Fournisseur : SOGEBAT (Tiers n° 00019814)
+Marché : avec suffisamment de disponible, recherché à partir de la HO 0001 0304 01
+HO d'imputations : 0001-0304-05-02
+Prestations : EF2301, EF2595, EF2589, EF2471, EF2449, EF2356, EF2462, EF2313, EF2375,EF3111
+Qté : 1";"K20921";"";"EDU";"ok";"EVOLVE CHM";"Marché 051531/ZE/001"
+"";"> création commande à partir d'un POT (Opération)";">> se référer à la commande K34900  sur GOLIATH 
+(si possible, voir si historique des dépenses à jour mis à jour dans le POT - GOP200)";"K20917";"";"";"ok";"EVOLVE CHM";"POT 0339 21, historique des dépenses à jour"
+"FCT200";"> Enregistrer une facture";">> Facturée liée à la commande créée sur la ligne 10";"O28446";"";"EDU";"ok";"EVOLVE CHM";"Facturée liée à la commande K20913"
+"";"> accès facture + accès imputations";">> Facturée liée à la commande créée sur la ligne 10";"O28446";"";"EDU";"ok";"EVOLVE CHM";""
+"MRC340";"> accès Marché + accès au résumé d'un lot de marché";"049180";"";"";"EDU";"ok";"EVOLVE CHM";""
+"";"> ajouter un lot au marché, contrôler que le taux de RG soit modifiable dans l'onglet Facturation";"049156";"";"";"EDU";"ok";"EVOLVE CHM";"SOCOTEC / CTE / 50 HT / POT 1232-01-01"
+"";"> validation du détail marché précédemment créé";"049156";"";"";"EDU";"ok";"EVOLVE CHM";""
+"";"> ajouter un sous-traitant sur lot de marché existant";"049156";"";"";"EDU";"ok";"EVOLVE CHM";"HVA CONCEPT - EIFFAGE CONSTRUCTION / 9 721,56 TTC, TVA 5.5"
+"CNT900";"> accès contrat GF + visualisation Echéancier d'une prestation";"004627";"";"";"EDU";"ok";"EVOLVE CHM";""
+"RST925";"> accès à la gestion des BT MCS";"Pas d'entrée spécifique";"";"";"";"ok";"EVOLVE CHM";"Test annulation étape dans le BTV et réédition btv ok dans le BT 087539"
+"BDG100";"> accès et déroulé arborescence Budget à la HO4";"INVINFOR , HO 0001-0403-03-01";"";"";"";"ok";"EVOLVE CHM";""
+"GTP020";"> modif. d'un équipement";"Equipement robinetterie (ROB), UG 132413
+Equipement chaudière (CHD), UG 160589";"";"";"";"ok";"EVOLVE CHM";""
+"SIN200";"> Gérer les sinistres : Générique. Accès SIN200 et vérification de la cohérence des données";"Pas d'entrée spécifique";"";"";"";"ok";"EVOLVE CHM";"Sinistre 004031"
+"RST970";"> Créer un bon de sortie";"Pas d'entrée spécifique";"Bon de sortie n°185806";"";"";"ok";"EVOLVE CHM";""
+"RST963";"> Gérer les sorties de stock";"";"";"";"";"ok";"EVOLVE CHM";"Commentaire auto affiché ou pas"
+"ACH600 02";"> O.E pour comptabilisation des factures CALL PGM(IKSPPGMRE7/CPTFACT)";"";"";"";"";"ok";"EVOLVE CHM";"Facture O28445 comptabilisée"
+"CGNINT 01";"> O.E. Intégration d'OD (MASSARTFR)";"Fichier comportant des écritures fonctionnellement erronées 
+(Pas de descente au dernier niveau de HO du budget)";"";"";"";"";"";"Pas de boucle de l'OE, plantage ok avec alimentation du KIECERP : 
+Budget Exercice 2024, plan MSDEPL, collaborateur DEC inexistant ou bien il possède un fils (Plan budgétaire)"
+"";"> O.E. Intégration d'OD (MASSARTFR)";"Fichier cohérent sur la plan fonctionnel";"";"";"";"ok";"EVOLVE CHM";"Lot 8, pièce créée n° 250000131"
+"";"> Validation et déversement des écritures : via IKOS - CGN080 ou via l'OE CPTLOT_01";"";"";"";"";"ok";"EVOLVE CHM";"Totalité des écritures présentes dans l'historique comptable (KHSCPTP)"
+"ENTREV 01";"> O.E Révision des prx spécifiques marchés";"Marché 052896";"";"";"";"";"";"Résultat conforme à la prod"
+"***";"";"";"";"";"";"";"";""
+"SELECT LCNOCOMMAN,CMDTENRCDE FROM kcomdep";"";"";"";"";"";"";"";""
+"join klgcdep on CMNOCOMMAN = LCNOCOMMAN";"";"";"";"";"";"";"";""
+"WHERE CMCDTYPCDE = '200'";"";"";"";"";"";"";"";""
+"and CMCDOGA = 'FMC' and CMDTENRCDE >= '20240101'";"";"";"";"";"";"";"";""
+"GROUP BY LCNOCOMMAN,CMDTENRCDE";"";"";"";"";"";"";"";""
+"HAVING count (LCNOCOMMAN) >= '10'";"";"";"";"";"";"";"";""
+"ORDER BY CMDTENRCDE";"";"";"";"";"";"";"";""

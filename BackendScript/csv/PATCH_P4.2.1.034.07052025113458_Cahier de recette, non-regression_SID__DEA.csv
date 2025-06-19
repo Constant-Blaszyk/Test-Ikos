@@ -1,0 +1,30 @@
+﻿"Module";"Formation";"Description";"Prérequis";"Date";"Type";"Système";"Statut";"Référence";"Commentaires";"Formateur"
+"SID";"> SID200 : recherche d'une demande en erreur";"En SID200, avec les filtres par défaut, lancer la recherche
+Isoler un échange avec une erreur de type ""demande 00xxxxxxx active dans le PGI sur ce territoire.""";"";"N° échange 11305089
+N° unique 062012549867310671";"";"";"EVOLVE CHM";"ok";"";"Pierre Garcia"
+"";"> DEA110 ; annuler une demande déjà active";"En DEA110, se rendre sur la demande considérée comme Active : l'annuler (Origine de l'annulation : Gestionnaire || Motif de l'annumation : quelconque) et mettre à blanc le n° unique (via VV - Saisir le n° unique d'une demande radiée)";"";"""demande 000234838 active dans le PGI sur ce territoire""";"";"";"EVOLVE CHM";"ok";"";"Pierre Garcia"
+"";"> SID200 : corriger et intégrer un échange";"En SID200, retourner sur le précédent échange en erreur, cliquer sur Corriger les informations, parcourir tous les onglets et ckiquer sur Terminer";"";"N° échange 11305089
+N° unique 062012549867310671";"";"";"EVOLVE CHM";"ok";"";"Pierre Garcia"
+"";"> DEA110 : accès sur une demande issue de l'intégration précédente";"Si pas d'anomalie l'échange sera considéré comme intégré. Retourner en DEA110, faire une recherche sur le n° unique de l'échange corrigé et intégré";"";"Demande 001333662";"";"";"EVOLVE CHM";"ok";"Enregistrement 	Réalisé(e) par MASSART Frédéric le 17/04/2025";"Pierre Garcia"
+"DEA110";"> Gérer les demandes : Générique";"Accès DEA110 et navigation dans les diverses rubriques";"SELECT * FROM ddedap WHERE BMINDNTDDE = 'E' AND BMCDETENPC = 'ENR'  
+AND BMDTEGTDDE >= '20240101'";"Dossier 001286898";"";"";"";"";"Flux WS vers le SNE : NE PAS ENTREPRENDRE D'ACTIONS EN RECETTE";"Sylvain Fourdrain"
+"";"> DEA110 : gérer les membres du foyer, Ajouter un nouveau membre";"VV - Gérer les membres du foyer
+VV - Ajouter un nouveau membre (avec lien de type - Enfant du demandeur)";"";"Dossier 001286898";"";"";"";"";"Flux WS vers le SNE : NE PAS ENTREPRENDRE D'ACTIONS EN RECETTE";"Sylvain Fourdrain"
+"";"> DEA110 : déroulé de l'étape Proposition à la CAL";"Entrer dans l'étape Proposition à la CAL
+VV - Faire une nouvelle proposition
+Rechercher et sélectionner un logement quelconque
+Valider la création de la proposition
+Dérouler l'avancement de la proposition : Etude dossier, Inscription commission (Saisir une décision pour enchainer sur les actions suivantes), Proposition et visite, et Attente attribution";"";"Dossier 001286898";"";"";"";"";"Flux WS vers le SNE : NE PAS ENTREPRENDRE D'ACTIONS EN RECETTE";"Sylvain Fourdrain"
+"";"> DEA400 : inscription CAL";"> Vérifier la présence de la proposition issue de l'étape précédente
+(Proposition à la CAL / Inscription commission)
+> Dérouler les étapes Verrouillage, Envoi evnt inscrip CAL, Saisie décisions";"";"Dossier 001286898";"";"";"";"";"Flux WS vers le SNE : NE PAS ENTREPRENDRE D'ACTIONS EN RECETTE";"Sylvain Fourdrain"
+"";"> DEA110 : déroulé de l'étape Attribution";"Entrer dans l'étape Attribution
+Vérifier la cohérence des informations (Commission du XX, Décision Commission XX)
+Valider l'étape";"";"Dossier 001286898";"";"";"";"";"Flux WS vers le SNE : NE PAS ENTREPRENDRE D'ACTIONS EN RECETTE";"Sylvain Fourdrain"
+"";"> DEA110 : déroulé de l'étape Signature de contrat";"Entrer dans l'étape Signature de contrat
+Valider la cohérence des informations
+Valider l'étape pour génération notamment du n° de CA et contrat";"";"Dossier 001286898";"";"";"";"";"Flux WS vers le SNE : NE PAS ENTREPRENDRE D'ACTIONS EN RECETTE";"Sylvain Fourdrain"
+"";"> DEA110 : rééditer un bail";"VV - Déclencher une action de communication
+Voulez-vous > Reproduire une action automatique
+Action > Déclencher";"";"Dossier 001286898";"";"";"";"";"Flux WS vers le SNE : NE PAS ENTREPRENDRE D'ACTIONS EN RECETTE";"Sylvain Fourdrain / Bernard Devienne"
+"";"";"";"";"";"";"";"";"";"Flux WS vers le SNE : NE PAS ENTREPRENDRE D'ACTIONS EN RECETTE";""

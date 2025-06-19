@@ -1,0 +1,77 @@
+﻿"Module";"Formation";"Description";"Prérequis";"Date";"Type";"Système";"Statut";"Référence"
+"";"Descriptif";"Actions à mener";"Contraintes ou entrées spécifiques";"Date Test";"Exécutant Test";"Envrionnement";"Résultat";"Obs."
+"CTC110M";"> Gérer les comptes client : Générique";"Accès CTC110 et navigation dans les différents onglets";"";"2025-05-09 00:00:00";"EDU";"EVOLVE CHM";"ok";"CA 118218"
+"";"> Gérer les comptes client : Accès GED et visu du Bail d'habitation";"";"";"2025-05-09 00:00:00";"EDU";"EVOLVE CHM";"ok";"CA 118218 (visu e doc décompte de charges ok)"
+"";"";"";"";"";"";"EVOLVE CHM";"ok";""
+"";"> Gérer les comptes client : Informations générales";"Vérifier la cohérence des données";"";"2025-05-09 00:00:00";"EDU";"EVOLVE CHM";"ok";"CA 118218"
+"";"> Gérer les comptes client : Tiers, gérer la composition familiale";"VV - Modifier les occupants : supprimer puis ajouter un Occupant";"";"2025-05-09 00:00:00";"EDU";"EVOLVE CHM";"ok";"CA 118218 suppr./ajout Tiers 002587014   Mr DUCHATEAU NICOLAS"
+"";"> Gérer les comptes client : Tiers, gérer la composition familiale";"VV - Modifier les occupants : modifier un rôle, positionner une date de fin rattachement";"";"2025-05-09 00:00:00";"EDU";"EVOLVE CHM";"ok";"CA 118218 : Madame DOMINIQUE KORALEWSKI passée CMI invalidité"
+"";"> Gérer les comptes client : Tiers, gérer les adresses";"VV - Gérer les adresses : entreprendre une modification quelconque";"";"2025-05-09 00:00:00";"EDU";"EVOLVE CHM";"ok";"CA 118218 : modif Acheminement provisoire : HBL => Postal // modif adresse de repli"
+"";"> Gérer les comptes client : Tiers, modifier l'intitulé compte client";"VV - Modifier l'intitulé compte client : entreprendre une modification quelconque";"";"2025-05-09 00:00:00";"EDU";"EVOLVE CHM";"ok";"CA 118218 : ajout 0905 intitulé long"
+"";"> Gérer les comptes client : Lots & Contrats, gestion des congés";"VV - Gérer les congés : enregistrer un congé (ug principale ou sta)
+Puis enregistrement d'un ramené sur celui-ci, suivi de la liquidation";"";"2025-05-09 00:00:00";"EDU";"EVOLVE CHM";"ok";"CA 118218 : annulation congé commencé sur stationnement 200725 / annulation étape liquidation + annul congé
+200674 : enregistrement congé + ramené + liquidation"
+"";"> Gérer les comptes client : Lots & Contrats, gestion des exemptions";"VV - Gérer les exemptions : ajouter une exemption (type ASS et motif ASS)";"";"2025-05-09 00:00:00";"EDU";"EVOLVE CHM";"ok";"CA 118218 : ajout exemption ASS"
+"";"";"VV - Gérer les exemptions : supprimer l'exemption issue de l'étape précédente";"";"2025-05-09 00:00:00";"EDU";"EVOLVE CHM";"ok";"CA 118218 : suppression exemption ASS"
+"";"> Gérer les comptes client : Lots & Contrats, gestion des contrats";"Sélection d'un contrat puis VV - Avenant ajout d'un contractant : ajout et passage en principal";"";"2025-05-09 00:00:00";"EDU";"EVOLVE CHM";"ok";"CA 118218 ajout tiers 002587015 // génération avenant OK"
+"";"> Gérer les comptes client : Situation, gestion des modes de règlement";"Vérification des modes de règlement
+Définir un tiers comme payeur d'un accord";"Si nécessaire, ajout d'un accord de règlement ; le CA doit être en solde +
+(CTC110M, recherche d'un CA avec le Filtre : En place / Solde débiteur / Sans accord de règlement)";"2025-05-09 00:00:00";"EDU";"EVOLVE CHM";"ok";"CA 118218 : 000104060  tiers défini comme payeur"
+"";"> Gérer les comptes client : Situation, détail de la facturation";"VV - Voir détail du mois de facturation : cohérence des données, changement de période pour vérification de l'actualisation des données";"";"2025-05-09 00:00:00";"EDU";"EVOLVE CHM";"ok";"CA 118218"
+"";"> Gérer les comptes client : Situation, gestion des OD";"VV - Gérer les opérations diverses de facturation : créer une Opération diverse de facturation
+VV - Voir détail du mois de facturation et vérifier présence de l'OD créée
+VV - Gérer les opérations diverses de facturation : supprimer puis ajouter l'OD précédente
+puis VV - Facturer immédiatement
+Onglet Relevé de compte  : vérifier l'impact sur le solde et la présence de l'OD (ainsi que son libellé) dans le mois de facturation concerné";"Si pb de pile, visible en 5250 - FACEXP - via FAC400V (Liste des CA/UG à recalculer) : 
+lancer le FAC600M (Lancement Tâche de recalcul) pour remontée de l'OD.
+Si l'anomalie est au niveau du Relevé decompte, même process mais en 5250 - ENCEXP cette fois";"2025-05-09 00:00:00";"";"EVOLVE CHM";"ok";"CA 118218 : voir pile"
+"";"> Gérer les comptes client : Situation, gestion des rubriques réelles";"VV - Gérer la tarification réelle : entrer dans la rubrique, positionner une date de fin de validité puis en vérifier la répercussion dans le Détail du mois de facturation
+VV - Gérer la tarification réelle puis VV - Ajouter une rubrique, même type qu'invalidé précédemment
+VV - Gérer la tarification réelle puis VV - Gérer les bases de facturation : ajouter une base (= tantième) du même type que la rubrique invalidée précédemment, avec une quantité à 100 par exemple
+VV - Gérer la tarification réelle puis VV - Gérer les taux : ajouter un taux du même type que la rubrique invalidée précédemment, avec date de début supérieure à la date de début initiale";"VM1 - CTR Indiv. VMC Smp Flux";"2025-05-09 00:00:00";"EDU";"EVOLVE CHM";"";"CA 348708"
+"";"> Gérer les comptes client : Relevé de compte";"Vérification de la cohérence des données affichées";"";"2025-05-09 00:00:00";"EDU";"EVOLVE CHM";"ok";"CA 348708"
+"CNC100";"> Gérer les contrats client : Générique";"Accès CNC100 et navigation dans les différents onglets";"";"2025-05-09 00:00:00";"EDU";"EVOLVE CHM";"ok";"Contrat 000169926"
+"";"Synthèse contrat client";"VV - congés d'un contractant";"";"2025-05-09 00:00:00";"EDU";"EVOLVE CHM";"ok";"Contrat 000169926  - Congé 003784602"
+"COX200M";"> Gérer les dossiers de contentieux : Générique";"Accès COX200M et navigation dans les diverses rubriques";"";"2025-05-21 00:00:00";"EDU";"EVOLVE CHM";"ok";"CA 348706"
+"";"> CTX- Démarrage Procédure , et installation des actions";"VV - Démarrer une procédure";"JUG - Jugement";"2025-05-21 00:00:00";"EDU";"EVOLVE CHM";"ok";"CA 348706 : procédure JUG"
+"";"> CTX- Démarrer une procédure à une étape donnée, et installation des actions";"VV - Démarrer une procédure à une étape donnée, puis sélection des actions à installer suivantes : 'Jugement sans délais' puis 'Mise en demeure'. Vérifier ensuite la présence dans les Procédures en cours et Actions à exécuter.";"Procédure JUG (Jugement), à l'Etape EV1";"2025-05-21 00:00:00";"EDU";"EVOLVE CHM";"ok";"CA 348706"
+"";"> CTX- Repositionner une procédure à une étape donnée";"Au sein d'une procédure, VV - Repositionner la procédure à une étape donnée";"(CHX ou INI par exemple)";"2025-05-09 00:00:00";"";"EVOLVE CHM";"ok";"CA348706"
+"";"> CTX- Arrêt de procédure";"Au sein d'une procédure, VV - Arrêter la procédure";"Suite régression avril 2025 :
+Tester un arrêt de procédure sur un dossier avec accord de règlement en cours (PLA ou PLX en cours)";"2025-05-09 00:00:00";"EDU";"EVOLVE CHM";"ok";"CA 100862 : arrêt procédure JUG alors que PLX en cours
+CA 100656 : arrêt procédure PCX alors que PLA en cours
+CA 103698 : arrêt procédure saisine CAF +  Accompagnement social alors que PLX en cours"
+"";"> CTX - Gestion des tiers";"VV - Gérer les tiers du dossier : 
+Supprimer puis ajouter un Tiers. Vérifier ensuite la présence de la réf. Externe en tant que libellé";"exemple de type de Tiers : AVO ou HUI";"2025-05-21 00:00:00";"EDU";"EVOLVE CHM";"ok";"CA 348706 : ajout suppression 001137711"
+"PTM600
+FMC";"> Gérer les lots : Générique";"Accès PTM600 et navigation dans les différents onglets";"";"2025-05-21 00:00:00";"EDU";"EVOLVE CHM";"ok";"UG 118220"
+"";"> Gérer les lots : Eléments financiers";"Changer la période de calcul et lancer un recalcul";"";"2025-05-21 00:00:00";"EDU";"EVOLVE CHM";"ok";"UG 118220"
+"";"> Gérer les lots : Eléments financiers, Gérer les rubriques";"VV - Gérer les rubriques
+Invalider une rubrique et raffraichir
+Ajouter une rubrique (si calcul en règle, alors pas de montant, et inversement)";"Code tantième SH ou VM3 par exemple";"2025-05-21 00:00:00";"EDU";"EVOLVE CHM";"ok";"UG 118220 	VM1  /  CTR Indiv. VMC Smp Flux"
+"";"> Gérer les lots : Eléments financiers, Gérer les bases de facturation";"VV - Gérer les bases de facturation
+Supprimer une base de facturation
+Ajouter une base de facturation, à l'identique de celle supprimée précédemment";"Code tantième SH ou VM3 par exemple";"";"";"EVOLVE CHM";"ok";"UG 118220"
+"";"> Gérer les lots : Eléments financiers, Gérer les taux de facturation";"VV - Gérer les taux de facturation
+Supprimer un taux de facturation
+Ajouter un taux de facturation, à l'identique de celui supprimé précédemment";"Code tantième SH ou VM3 par exemple";"";"";"EVOLVE CHM";"ok";"UG  118220"
+"";"> Gérer les lots : Partenaires";"Vérifier la cohérence des données";"";"";"";"EVOLVE CHM";"ok";"UG  118220"
+"";"> Gérer les lots : Informations générales du lot";"VV - Modifier les informations générales du lot
+Changer la typologie (T03, T04, etc…), ainsi que la date de reception ou de construction";"";"";"";"EVOLVE CHM";"ok";"UG  118220"
+"";"> Gérer les lots : Bloc notes";"VV - Modifier le bloc notes
+Ajouter un commentaire, valider puis revenir dans la rubrique pour confirmer sa présence";"";"";"";"EVOLVE CHM";"ok";"UG  118220"
+"ELO100M";"> Gérer les états des lots : Générique";"Accès ELO100M et vérification tableau de la vacance";"";"";"";"EVOLVE CHM";"ok";"UG  118220"
+"";"> Gérer les états des lots : Générique";"Ajouter un état de vacance et viser (se positionner une Fonction Responsable de remplacement VISA en ORG120) la demander";"";"";"";"EVOLVE CHM";"ok";"UG  118220 ajout travaux léger"
+"FCL718M
+GMC";"> Gérer les aides non-déversées : traiter un versement d'aide en erreur";"Accès en FCL718M [GMC] et sélection - si besoin - d'un mois précédent
+Sélection d'une pièce où figure des rejets, noter le n° de pièce
+VV - Gérer les rejets par panier
+Ajouter un rejet au panier puis bouton 'Traiter en rejet'
+Correction (facultative) de l'erreur puis 'Valider et continuer'
+Revenir sur la pièce concernée, l'aide corrigée doit être passé au statut Enregistré";"Le versement des aides se faisant vers le 10 du mois, et la génération des OD vers le 17, effectuer la recette sur un mois dont la date du 10 est déjà passée";"";"";"EVOLVE CHM";"ok";"Numéro pièce : 
+412 940022341"
+"GDC200";"> Gérer les affaires : Générique";"Accès GDC200 et recherche via n° de CA ou n° d'affaire";"UG 153956 // CA 385936";"";"EDU";"EVOLVE CHM";"ok";""
+"GDC100";"> Traiter une affaire : Créer une affaire";"Création d'une affaire et test de l'accès agenda (avec un profil CCP) depuis la 2ème page de création de l'affaire";"CA 348706";"";"EDU";"EVOLVE CHM";"ok";"Affaire créée - BH4993 - Accès agenda (VINCENT Karine) ok"
+"XWF100";"> Traiter une action de type 'Pièces justificatives'";"Vérifier à l'issue la création de la relation partenaire sur le CA";"Action n° 000530892  de Type Action ""Attestation d'assurance"", pour le CA  373932";"";"EDU";"EVOLVE CHM";"ok";"Relation Tiers (ASS) créée avec la réf. Externe saisie"
+"PTM100";"> Décaler un Projet";"VV - Décaler le projet";"Vérifier dans la synthèse du projet la bonne prise en compte de la nvlle date";"";"EDU";"EVOLVE CHM";"ok";"Projet 000001616, décalage du 01/07/2025 au 01/07/2025"
+"";"> Réceptionner des lots";"VV - Réceptionner des lots";"Dans l'avancement des tâches, Définition des lots, vérifier sur une UG la prise en compte de la nvlle date";"";"EDU";"EVOLVE CHM";"ok";"Projet 000001616, réception au 20/05/2025"
+"";"> Livrer des lots";"VV - Livrer des lots";"Dans l'avancement des tâches, Définition des lots, vérifier sur une UG la prise en compte de la nvlle date";"";"EDU";"EVOLVE CHM";"ok";"Projet 000001616, livraison au 02/08/2025"

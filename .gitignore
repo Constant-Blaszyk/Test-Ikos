@@ -1,60 +1,68 @@
-# --- Python ---
-__pycache__/
-*.py[cod]
-*.pyo
-*.pyd
-*.pyc
-*.so
-*.egg-info/
-*.egg
-*.log
-*.sqlite3
-*.db
-*.bak
-*.swp
-*.tmp
-*.temp
-*.cache
-.jython_cache/
-.env
-.env.*
-reports/
-rapport_test_*.pdf
-test_automation.log
-test_video_*.mp4
-venv*
+# Dossier node_modules généré par npm ou yarn
+interface/node_modules/
 
-# --- Node.js / Frontend ---
-node_modules/
-dist/
-dist-ssr/
-.next/
-.bolt/
-*.local
-npm-debug.log*
-yarn-debug.log*
-yarn-error.log*
-pnpm-debug.log*
-lerna-debug.log*
+# Fichiers de log générés par les outils de développement et autres
+interface/*.log
+interface/*.log.*
 
-# --- Editor/OS ---
-.vscode/
-!.vscode/extensions.json
-.idea/
-.DS_Store
-*.suo
-*.ntvs*
-*.njsproj
-*.sln
-*.sw?
+# Dossier de build
+interface/build/
 
-# --- CSV/Excel/Temp Data ---
-csv/
-*.csv
-*.xlsx
+# Dossier de cache de certains outils
+interface/.cache/
 
-# --- Server ---
-Interface/server/.env
+# Fichiers de configuration spécifiques à certains IDE ou éditeurs
+interface/.idea/
+interface/.vscode/
 
-# --- Misc ---
-*.pdf
+# Fichiers générés par les tests et couverture de code
+interface/coverage/
+
+# Fichiers de environnement
+interface/.env
+interface/.env.local
+interface/.env.development
+interface/.env.production
+
+# Autres fichiers qui pourraient contenir des informations sensibles ou spécifiques à la machine locale
+interface/.DS_Store
+interface/Thumbs.db
+
+# Dossiers et fichiers générés par `npm` ou `yarn`
+interface/yarn.lock
+interface/package-lock.json
+
+# Fichiers de config spécifiques à certains outils ou configurations locales
+interface/*.config.js
+
+interface/*.next
+
+
+# Environnement virtuel
+BackendScript/venv/
+
+# Fichiers de cache Python
+BackendScript/__pycache__/
+BackendScript/*.py[cod]
+
+# Fichiers de logs
+BackendScript/*.log
+
+# Fichiers générés par les tests et couverture de code
+BackendScript/.pytest_cache/
+BackendScript/.coverage
+
+# Fichiers de configuration spécifiques à certains IDE ou éditeurs
+BackendScript/.idea/
+BackendScript/.vscode/
+
+# Fichiers de build et de distribution
+BackendScript/build/
+BackendScript/dist/
+BackendScript/*.egg-info/
+
+BackendScript/shared/__pycache__
+
+# Autres fichiers à ignorer
+BackendScript/.DS_Store
+BackendScript/Thumbs.db
