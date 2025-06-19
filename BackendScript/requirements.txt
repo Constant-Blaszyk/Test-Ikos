@@ -1,0 +1,31 @@
+# Web Framework
+Flask==2.3.3
+Flask-CORS==4.0.0
+Flask-SocketIO==5.3.6
+
+# Web Automation
+selenium==4.15.2
+
+# Database
+pymongo==4.6.0
+
+# PDF Generation
+reportlab==4.0.7
+
+# Image Processing
+Pillow==10.1.0
+scikit-image==0.22.0
+opencv-python==4.8.1.78
+
+# WebSocket
+python-socketio==5.10.0
+
+# Date/Time utilities
+python-dateutil==2.8.2
+
+# System utilities
+psutil==5.9.6
+
+# Additional dependencies that might be needed
+numpy==1.24.4
+matplotlib==3.8.2

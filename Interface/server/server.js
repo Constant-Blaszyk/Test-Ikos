@@ -2,11 +2,13 @@ const express = require('express');
 const mongoose = require('mongoose');
 const { TestModel } = require('./models/TestModel');
 const authRoutes = require('./routes/auth');
+const cors = require('cors');
 require('dotenv').config();
 
 const app = express();
 
 // Middleware
+app.use(cors());
 app.use(express.json());
 app.use((req, res, next) => {
   res.header('Access-Control-Allow-Origin', 'http://localhost:5173');

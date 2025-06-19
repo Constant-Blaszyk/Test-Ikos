@@ -16,6 +16,7 @@ import io
 from datetime import datetime
 from pymongo import MongoClient
 import gridfs
+import subprocess
 
 app = Flask(__name__)
 socketio.init_app(
@@ -361,12 +362,12 @@ def execute_test(test_id):
             pdf_id, pdf_filename = generate_pdf(steps_list, exec_time)
             
             # Mettre à jour les informations du test
-            success = all(step.get('status') == 'completed' for step in steps_list)
+            success = all(step.get('status', '').lower() == 'succès' for step in steps_list)
             rapport_collection.update_one(
                 {"test_id": test_id},
                 {
                     "$set": {
-                        "status": "completed",
+                        "status": "completed" if success else "error",
                         "pdf_id": pdf_id,
                         "filename": pdf_filename,
                         "execution_time": exec_time,
@@ -444,14 +445,11 @@ def start_test(test_id):
 def get_test_status(test_id):
     try:
         logger.info(f"Vérification du statut du test {test_id}")
-        
-        # Rechercher le test dans la collection rapport
         rapport_collection = db_test["rapport"]
         test = rapport_collection.find_one({"test_id": test_id})
-        
+
         if not test:
             logger.info(f"Test {test_id} non trouvé, création automatique...")
-            # Créer une nouvelle entrée pour le test
             initial_data = {
                 "test_id": test_id,
                 "status": "running",
@@ -460,46 +458,35 @@ def get_test_status(test_id):
                 "steps": []
             }
             rapport_collection.insert_one(initial_data)
-            
-            # Lancer le test en arrière-plan
             socketio.start_background_task(target=execute_test, test_id=test_id)
-            
             return jsonify({
                 "test_id": test_id,
                 "status": "running",
-                "progress": 0,
-                "message": "Test created and started"
+                "progress": 0
             })
-            
-        # Calculer la progression
-        total_steps = len(test.get('steps', []))
-        completed_steps = len([s for s in test.get('steps', []) if s.get('status') == 'completed'])
-        progress = (completed_steps / total_steps * 100) if total_steps > 0 else 0
-        
-        # Mapper le statut pour correspondre au frontend
-        status_mapping = {
-            'initiated': 'pending',
-            'running': 'running',
-            'completed': 'finished',
-            'error': 'failed'
-        }
-        
+
+        # Calcul de la progression
+        steps = test.get('steps', [])
+        total_steps = len(steps)
+        # On considère une étape terminée si status == 'succès' (pour correspondre à ta logique)
+        completed_steps = len([s for s in steps if s.get('status', '').lower() == 'succès'])
+        progress = int((completed_steps / total_steps) * 100) if total_steps > 0 else 0
+
+        # Statut brut de la base
+        raw_status = test.get('status', 'running')
+        # On ne mappe pas ici, on garde les valeurs attendues par le front
+        if raw_status not in ['running', 'completed', 'error']:
+            raw_status = 'running'
+
         return jsonify({
-            "test_id": test_id,
-            "status": status_mapping.get(test.get('status', 'pending'), 'pending'),
-            "progress": progress,
-            "steps": test.get('steps', []),
-            "error": test.get('error'),
-            "execution_time": test.get('execution_time'),
-            "success": test.get('success', False)
+            "status": raw_status,
+            "progress": progress
         })
-        
+
     except Exception as e:
         logger.error(f"Erreur lors de la récupération du statut: {str(e)}", exc_info=True)
         return jsonify({
-            "error": str(e),
-            "test_id": test_id,
-            "status": "failed",
+            "status": "error",
             "progress": 0
         }), 500
     
@@ -554,6 +541,26 @@ def download_pdf_by_filename(filename):
     except Exception as e:
         logger.error(f"Erreur lors du téléchargement du PDF par nom: {str(e)}", exc_info=True)
         return jsonify({"error": str(e)}), 500
+
+def start_screen_recording(output_file="test_recording.mp4"):
+    cmd = [
+        "ffmpeg",
+        "-y",
+        "-video_size", "1920x1080",  # adapte à la résolution de ta session VNC si besoin
+        "-framerate", "25",
+        "-f", "x11grab",
+        "-i", ":10.0",               # display VNC adapté ici
+        output_file
+    ]
+    return subprocess.Popen(cmd)
+
+def stop_screen_recording(process):
+    process.terminate()
+    process.wait()
+
+def run_test():
+    print("Test en cours...")
+    time.sleep(5)
 
 # Ajouter la vérification de la connexion au démarrage
 if __name__ == '__main__':

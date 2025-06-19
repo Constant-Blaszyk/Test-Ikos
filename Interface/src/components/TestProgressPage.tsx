@@ -19,7 +19,7 @@ const TestProgressPage: React.FC = () => {
           },
         });
         // Si tu veux utiliser un task_id, adapte ici selon la réponse de ton API
-        setTaskId(response.data.pdf_id || response.data.task_id || null);
+        setTaskId(response.data.test_id || null);
       } catch (err: any) {
         setError('Erreur lors du lancement du test automatique');
       }
@@ -34,7 +34,13 @@ const TestProgressPage: React.FC = () => {
       try {
         const res = await axios.get(`http://localhost:5000/api/test_status/${taskId}`);
         setProgress(res.data.progress); // progress = 0 à 100
-        setStatus(res.data.status); // status = "pending", "running", "finished", "failed"
+        setStatus(
+          res.data.status === 'completed'
+            ? 'finished'
+            : res.data.status === 'error'
+            ? 'failed'
+            : res.data.status
+        ); // status = "pending", "running", "finished", "failed"
         if (res.data.status === 'finished' || res.data.status === 'failed') {
           clearInterval(interval);
         }
