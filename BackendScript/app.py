@@ -11,12 +11,25 @@ from events.socket_handlers import register_socket_handlers
 from bson import ObjectId
 from gridfs.errors import NoFile
 
+from reportlab.lib import colors
+from reportlab.lib.pagesizes import letter, A4
+from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle, PageBreak, Image
+from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
+from reportlab.lib.units import inch, cm
+from reportlab.lib.enums import TA_CENTER, TA_LEFT, TA_RIGHT, TA_JUSTIFY
+from reportlab.graphics.shapes import Drawing, Rect, Line
+from reportlab.graphics.charts.piecharts import Pie
+from reportlab.graphics import renderPDF
+from datetime import datetime
+import io
+
 import time
 import io
 from datetime import datetime
 from pymongo import MongoClient
 import gridfs
 import subprocess
+import os
 
 app = Flask(__name__)
 socketio.init_app(
@@ -43,40 +56,10 @@ def after_request(response):
     response.headers.add('Access-Control-Allow-Methods', 'GET,PUT,POST,DELETE,OPTIONS')
     return response
 
-# Nouvel endpoint pour les rapports
-@app.route('/api/rapport/<test_id>', methods=['GET', 'OPTIONS'])
-@cross_origin()
-def get_rapport(test_id):
-    try:
-        logger.info(f"Récupération du rapport pour le test {test_id}")
-        rapport_collection = db_test["rapport"]
-        rapport = rapport_collection.find_one({"test_id": test_id})
-        
-        if not rapport:
-            return jsonify({
-                "error": "Rapport non trouvé",
-                "test_id": test_id
-            }), 404
-            
-        # Convertir ObjectId en str
-        rapport['_id'] = str(rapport['_id'])
-        
-        return jsonify({
-            "test_id": test_id,
-            "rapport": rapport,
-            "status": "success"
-        })
-        
-    except Exception as e:
-        logger.error(f"Erreur lors de la récupération du rapport: {str(e)}", exc_info=True)
-        return jsonify({
-            "error": str(e),
-            "test_id": test_id,
-            "status": "error"
-        }), 500
+
 
 # --- MongoDB config ---
-mongo_client = MongoClient("mongodb://localhost:27017/")
+mongo_client = MongoClient("mongodb://10.110.6.139:27017/")
 db_test = mongo_client["TestIkos"]    # Base de données pour les tests et rapports
 fs = gridfs.GridFS(db_test)           # GridFS pointé vers TestIkos
 
@@ -100,115 +83,330 @@ def check_mongodb_connection():
     except Exception as e:
         logger.error(f"Erreur de connexion MongoDB: {str(e)}", exc_info=True)
         return False
-
-# --- PDF generation avec temps et étapes ---
-def generate_pdf(steps_list, execution_time):
-    timestamp = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
-    buffer = io.BytesIO()
-
-    doc = SimpleDocTemplate(
-        buffer,
-        pagesize=letter,
-        rightMargin=72,
-        leftMargin=72,
-        topMargin=72,
-        bottomMargin=72
-    )
-    styles = getSampleStyleSheet()
-    styles.add(ParagraphStyle(
-        name='MainTitle',
-        parent=styles['Title'],
-        fontSize=24,
-        spaceAfter=30,
-        textColor=colors.HexColor("#1a237e"),
-        alignment=1
-    ))
-    styles.add(ParagraphStyle(
-        name='StepContent',
-        fontSize=11,
-        leading=14,
-        leftIndent=20,
-        textColor=colors.HexColor("#424242")
-    ))
-
-    story = [
-        Paragraph("Rapport d'Automatisation de Test", styles['MainTitle']),
-        Paragraph(f"Date d'exécution : {timestamp}", styles['StepContent']),
-        Paragraph(f"Durée totale du test : {execution_time:.2f} secondes", styles['StepContent']),
-        Spacer(1, 20)
-    ]
-
-    all_success = all(step.get('status', '').lower() == 'succès' for step in steps_list)
-    summary = "Succès complet" if all_success else "Échec détecté dans certaines étapes"
-    story.append(Paragraph(f"Résumé du test : {summary}", styles['StepContent']))
-    story.append(Spacer(1, 20))
-
-    for i, step in enumerate(steps_list, 1):
-        story.extend([
-            Paragraph(f"Étape {i}: {step.get('description', 'Étape')}", styles['StepContent']),
-            Paragraph(f"Statut: {step.get('status', 'inconnu')}", styles['StepContent']),
-            Paragraph(f"Résultat: {step.get('result', 'Aucun résultat')}", styles['StepContent']),
-            Spacer(1, 10)
-        ])
-
-    story.append(Spacer(1, 30))
-    story.append(Paragraph(f"Document généré automatiquement le {timestamp}", styles['StepContent']))
-
-    doc.build(story)
-    buffer.seek(0)
+    
+@app.route('/api/reports/<test_id>', methods=['GET'])
+def get_report(test_id):
+    if not ObjectId.is_valid(test_id):
+        return jsonify({"error": "Invalid test ID format."}), 400
 
     try:
-        # Vérifier la connexion MongoDB
+        logger.info(f"Retrieving report for test {test_id}")
+        test_result = db_test["rapport"].find_one({"_id": ObjectId(test_id)})
+
+        if not test_result:
+            return jsonify({"error": "Test not found."}), 404
+
+        # Convert ObjectId to string for JSON serialization
+        test_result['_id'] = str(test_result['_id'])
+        test_result['pdf_id'] = str(test_result['pdf_id'])
+        
+        return jsonify(test_result)
+
+    except Exception as e:
+        logger.error(f"Error retrieving report: {str(e)}", exc_info=True)
+        return jsonify({"error": str(e)}), 500
+
+# --- PDF generation avec temps et étapes ---
+def generate_pdf(steps_list, execution_time, module_name="", scenario_name="", test_id=""):
+    """Génère un rapport PDF esthétique avec mise en forme optimisée"""
+    
+    timestamp = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+    buffer = io.BytesIO()
+    
+    # Configuration du document
+    doc = SimpleDocTemplate(
+        buffer,
+        pagesize=A4,
+        rightMargin=2*cm,
+        leftMargin=2*cm,
+        topMargin=2.5*cm,
+        bottomMargin=2*cm,
+        title="Rapport d'Automatisation de Test"
+    )
+    
+    # Styles personnalisés optimisés
+    styles = getSampleStyleSheet()
+    
+    # Style pour le titre principal
+    styles.add(ParagraphStyle(
+        name='MainTitle',
+        fontSize=24,
+        spaceAfter=20,
+        spaceBefore=10,
+        textColor=colors.HexColor("#1a365d"),
+        alignment=TA_CENTER,
+        fontName='Helvetica-Bold'
+    ))
+    
+    # Style pour les sous-titres (SANS BACKGROUND pour éviter superposition)
+    styles.add(ParagraphStyle(
+        name='SectionTitle',
+        fontSize=14,
+        spaceAfter=10,
+        spaceBefore=15,
+        textColor=colors.HexColor("#2d3748"),
+        fontName='Helvetica-Bold',
+        leftIndent=0
+    ))
+    
+    # Style pour le titre des étapes
+    styles.add(ParagraphStyle(
+        name='StepTitle',
+        fontSize=12,
+        spaceAfter=5,
+        spaceBefore=10,
+        textColor=colors.HexColor("#2d3748"),
+        fontName='Helvetica-Bold'
+    ))
+    
+    # Style pour le contenu normal
+    styles.add(ParagraphStyle(
+        name='Content',
+        fontSize=10,
+        leading=14,
+        textColor=colors.HexColor("#4a5568"),
+        fontName='Helvetica'
+    ))
+    
+    # Style pour le pied de page
+    styles.add(ParagraphStyle(
+        name='Footer',
+        fontSize=9,
+        textColor=colors.HexColor("#718096"),
+        alignment=TA_CENTER,
+        fontName='Helvetica-Oblique'
+    ))
+
+    # Calcul des statistiques
+    total_steps = len(steps_list)
+    success_steps = sum(1 for step in steps_list if step.get('status', '').lower() in ['succès', 'success', 'completed'])
+    error_steps = sum(1 for step in steps_list if step.get('status', '').lower() in ['échec', 'error', 'failed', 'failure'])
+    warning_steps = total_steps - success_steps - error_steps
+    
+    success_rate = (success_steps / total_steps * 100) if total_steps > 0 else 0
+    all_success = success_steps == total_steps
+    
+    # Construction du contenu
+    story = []
+    
+    # Ligne décorative supérieure
+    line_drawing = Drawing(400, 15)
+    line_drawing.add(Line(0, 7, 400, 7, strokeColor=colors.HexColor("#4299e1"), strokeWidth=2))
+    story.append(line_drawing)
+    
+    # Titre principal
+    story.append(Paragraph("RAPPORT D'AUTOMATISATION DE TEST", styles['MainTitle']))
+    
+    # Ligne décorative inférieure
+    story.append(line_drawing)
+    story.append(Spacer(1, 20))
+    
+    # Section informations générales
+    story.append(Paragraph("INFORMATIONS GÉNÉRALES", styles['SectionTitle']))
+    
+    # Tableau des informations générales avec style simplifié
+    info_data = [
+        ['Date d\'exécution', timestamp],
+        ['Durée totale', f"{execution_time:.2f} secondes"],
+        ['Module', module_name or "Non spécifié"],
+        ['Scénario', scenario_name or "Non spécifié"],
+        ['ID du test', test_id or "Non spécifié"],
+        ['Nombre d\'étapes', str(total_steps)]
+    ]
+    
+    info_table = Table(info_data, colWidths=[4*cm, 8*cm])
+    info_table.setStyle(TableStyle([
+        ('BACKGROUND', (0, 0), (0, -1), colors.HexColor("#f8f9fa")),
+        ('TEXTCOLOR', (0, 0), (-1, -1), colors.HexColor("#2d3748")),
+        ('ALIGN', (0, 0), (-1, -1), 'LEFT'),
+        ('FONTNAME', (0, 0), (0, -1), 'Helvetica-Bold'),
+        ('FONTNAME', (1, 0), (1, -1), 'Helvetica'),
+        ('FONTSIZE', (0, 0), (-1, -1), 10),
+        ('GRID', (0, 0), (-1, -1), 0.5, colors.HexColor("#dee2e6")),
+        ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
+        ('LEFTPADDING', (0, 0), (-1, -1), 8),
+        ('RIGHTPADDING', (0, 0), (-1, -1), 8),
+        ('TOPPADDING', (0, 0), (-1, -1), 6),
+        ('BOTTOMPADDING', (0, 0), (-1, -1), 6)
+    ]))
+    
+    story.append(info_table)
+    story.append(Spacer(1, 20))
+    
+    # Section résumé
+    story.append(Paragraph("RÉSUMÉ EXÉCUTIF", styles['SectionTitle']))
+    
+    # Résumé dans un tableau simple
+    if all_success:
+        summary_text = "SUCCÈS COMPLET - Tous les tests ont été exécutés avec succès"
+        summary_bg = colors.HexColor("#d4edda")
+    else:
+        summary_text = f"TESTS PARTIELS - {error_steps} échec(s) détecté(s) sur {total_steps} étapes"
+        summary_bg = colors.HexColor("#f8d7da")
+    
+    summary_table = Table([[summary_text]], colWidths=[14*cm])
+    summary_table.setStyle(TableStyle([
+        ('BACKGROUND', (0, 0), (-1, -1), summary_bg),
+        ('TEXTCOLOR', (0, 0), (-1, -1), colors.HexColor("#2d3748")),
+        ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
+        ('FONTNAME', (0, 0), (-1, -1), 'Helvetica-Bold'),
+        ('FONTSIZE', (0, 0), (-1, -1), 11),
+        ('GRID', (0, 0), (-1, -1), 1, colors.HexColor("#adb5bd")),
+        ('TOPPADDING', (0, 0), (-1, -1), 10),
+        ('BOTTOMPADDING', (0, 0), (-1, -1), 10)
+    ]))
+    
+    story.append(summary_table)
+    story.append(Spacer(1, 15))
+    
+    # Tableau des statistiques
+    stats_data = [
+        ['Type', 'Nombre', 'Pourcentage'],
+        ['Succès', str(success_steps), f"{success_rate:.1f}%"],
+        ['Échecs', str(error_steps), f"{(error_steps/total_steps*100):.1f}%" if total_steps > 0 else "0%"],
+        ['Avertissements', str(warning_steps), f"{(warning_steps/total_steps*100):.1f}%" if total_steps > 0 else "0%"]
+    ]
+    
+    stats_table = Table(stats_data, colWidths=[4*cm, 3*cm, 3*cm])
+    stats_table.setStyle(TableStyle([
+        ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor("#6c757d")),
+        ('TEXTCOLOR', (0, 0), (-1, 0), colors.white),
+        ('TEXTCOLOR', (0, 1), (-1, -1), colors.HexColor("#2d3748")),
+        ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
+        ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
+        ('FONTNAME', (0, 1), (-1, -1), 'Helvetica'),
+        ('FONTSIZE', (0, 0), (-1, -1), 10),
+        ('GRID', (0, 0), (-1, -1), 0.5, colors.HexColor("#dee2e6")),
+        ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
+        ('TOPPADDING', (0, 0), (-1, -1), 6),
+        ('BOTTOMPADDING', (0, 0), (-1, -1), 6),
+        # Alternance de couleurs pour les lignes
+        ('ROWBACKGROUNDS', (0, 1), (-1, -1), [colors.white, colors.HexColor("#f8f9fa")])
+    ]))
+    
+    story.append(stats_table)
+    story.append(Spacer(1, 25))
+    
+    # Section détails des étapes avec espacement réduit
+    story.append(Paragraph("DÉTAIL DES ÉTAPES", styles['SectionTitle']))
+    
+    for i, step in enumerate(steps_list, 1):
+        status = step.get('status', 'inconnu').lower()
+        description = step.get('description', f'Étape {i}')
+        result = step.get('result', 'Aucun résultat disponible')
+        
+        # Déterminer la couleur selon le statut
+        if status in ['succès', 'success', 'completed']:
+            status_text = "SUCCÈS"
+            status_color = colors.HexColor("#28a745")
+        elif status in ['échec', 'error', 'failed', 'failure']:
+            status_text = "ÉCHEC" 
+            status_color = colors.HexColor("#dc3545")
+        else:
+            status_text = "AVERTISSEMENT"
+            status_color = colors.HexColor("#ffc107")
+        
+        # Titre de l'étape (SANS ESPACE EXCESSIF)
+        story.append(Paragraph(f"ÉTAPE {i}", styles['StepTitle']))
+        
+        # Contenu de l'étape dans un tableau compact
+        step_data = [
+            ['Description', description],
+            ['Statut', status_text],
+            ['Résultat', result]
+        ]
+        
+        step_table = Table(step_data, colWidths=[3*cm, 10*cm])
+        step_table.setStyle(TableStyle([
+            ('BACKGROUND', (0, 0), (0, -1), colors.HexColor("#f8f9fa")),
+            ('TEXTCOLOR', (0, 0), (-1, -1), colors.HexColor("#2d3748")),
+            ('TEXTCOLOR', (1, 1), (1, 1), status_color),  # Couleur du statut
+            ('ALIGN', (0, 0), (-1, -1), 'LEFT'),
+            ('FONTNAME', (0, 0), (0, -1), 'Helvetica-Bold'),
+            ('FONTNAME', (1, 0), (1, -1), 'Helvetica'),
+            ('FONTNAME', (1, 1), (1, 1), 'Helvetica-Bold'),  # Statut en gras
+            ('FONTSIZE', (0, 0), (-1, -1), 9),
+            ('VALIGN', (0, 0), (-1, -1), 'TOP'),
+            ('GRID', (0, 0), (-1, -1), 0.5, colors.HexColor("#dee2e6")),
+            ('LEFTPADDING', (0, 0), (-1, -1), 6),
+            ('RIGHTPADDING', (0, 0), (-1, -1), 6),
+            ('TOPPADDING', (0, 0), (-1, -1), 4),
+            ('BOTTOMPADDING', (0, 0), (-1, -1), 4)
+        ]))
+        
+        story.append(step_table)
+        
+        # ESPACEMENT RÉDUIT entre les étapes
+        if i < len(steps_list):
+            story.append(Spacer(1, 8))  # Réduit de 15 à 8
+    
+    # Pied de page
+    story.append(Spacer(1, 25))
+    story.append(Paragraph("─" * 60, styles['Footer']))
+    story.append(Spacer(1, 5))
+    story.append(Paragraph(f"Document généré automatiquement le {timestamp}", styles['Footer']))
+    story.append(Paragraph("Système d'automatisation de tests", styles['Footer']))
+    
+    # Construction du PDF
+    doc.build(story)
+    buffer.seek(0)
+    
+    try:
+        # Reste du code MongoDB identique...
         if not check_mongodb_connection():
             raise Exception("Impossible de se connecter à MongoDB")
-
-        # Stocker le PDF dans GridFS avec des métadonnées
+        
         pdf_filename = f"rapport_test_{datetime.now().strftime('%Y%m%d_%H%M%S')}.pdf"
         metadata = {
             "date_creation": datetime.now(),
             "execution_time": execution_time,
-            "success": all(step.get('status', '').lower() == 'succès' for step in steps_list),
-            "steps_count": len(steps_list)
+            "success": all_success,
+            "steps_count": total_steps,
+            "success_rate": success_rate,
+            "module": module_name,
+            "scenario": scenario_name,
+            "test_id": test_id,
+            "stats": {
+                "success": success_steps,
+                "error": error_steps,
+                "warning": warning_steps
+            }
         }
         
-        logger.info(f"Tentative de stockage du PDF '{pdf_filename}' dans GridFS")
+        logger.info(f"Stockage du PDF '{pdf_filename}' dans GridFS...")
         pdf_id = fs.put(
             buffer, 
             filename=pdf_filename,
-            metadata=metadata
+            metadata=metadata,
+            content_type="application/pdf"
         )
-        logger.info(f"PDF stocké avec succès dans GridFS avec l'ID: {pdf_id}")
+        logger.info(f"PDF stocké avec succès. ID: {pdf_id}")
         
-        # Sauvegarder dans la collection rapport
         rapport_collection = db_test["rapport"]
         rapport_info = {
+            "test_id": test_id,
             "pdf_id": str(pdf_id),
             "filename": pdf_filename,
             "date_creation": metadata["date_creation"],
             "execution_time": metadata["execution_time"],
             "success": metadata["success"],
             "steps_count": metadata["steps_count"],
+            "success_rate": metadata["success_rate"],
+            "module": module_name,
+            "scenario": scenario_name,
+            "status": "completed",
+            "stats": metadata["stats"],
             "steps": steps_list
         }
         
-        logger.info(f"Contenu du rapport à insérer: {rapport_info}")
         result = rapport_collection.insert_one(rapport_info)
-        
-        # Vérifier l'insertion
-        inserted_doc = rapport_collection.find_one({"_id": result.inserted_id})
-        if inserted_doc:
-            logger.info(f"Document inséré avec succès. ID: {result.inserted_id}")
-            logger.info(f"Contenu du document: {inserted_doc}")
-        else:
-            logger.error("Le document n'a pas été inséré correctement")
+        logger.info(f"Rapport sauvegardé avec succès. ID: {result.inserted_id}")
         
         return str(pdf_id), pdf_filename
-
+        
     except Exception as e:
-        logger.error(f"Erreur lors de la sauvegarde dans MongoDB: {str(e)}", exc_info=True)
-        raise
-
-
+        logger.error(f"Erreur lors de la génération du rapport PDF: {str(e)}", exc_info=True)
+        raise Exception(f"Impossible de générer le rapport PDF: {str(e)}")
 @app.route('/api/runCTXTest', methods=['GET'])
 def handle_run_ctx():
     logger.info("Starting CTX test execution")
@@ -572,6 +770,8 @@ if __name__ == '__main__':
         port=5000, 
         use_reloader=False
     )
+
+
 
 
 

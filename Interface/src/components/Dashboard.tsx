@@ -1,169 +1,256 @@
-import React, { useEffect, useState } from 'react';
-import { Link, useParams } from 'react-router-dom';
-import { Play, Loader2, CheckCircle, XCircle, Clock } from 'lucide-react';
-import { useTestContext } from '../context/TestContext';
-import { getTestHistory, startNewTest } from '../services/api';
-import { Test } from '../types';
-import { toast } from 'react-toastify';
+import React, { useState, useEffect } from 'react';
 import axios from 'axios';
+import { Link } from 'react-router-dom';
+import { Loader2, RefreshCw, BarChart3, TrendingUp, AlertCircle, CheckCircle, XCircle } from 'lucide-react';
+import { PieChart, Pie, Cell, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 
-const Dashboard: React.FC = () => {
-  const { moduleId } = useParams<{ moduleId: string }>();
-  const { testHistory, setTestHistory } = useTestContext();
-  const [loading, setLoading] = useState(true);
-  const [startingTest, setStartingTest] = useState(false);
-  const [error, setError] = useState<string>('');
+// Constantes
+const API_URL = 'http://localhost:3001/api';
+const COLORS = ['#10B981', '#EF4444'];
 
-  useEffect(() => {
-    const fetchModuleData = async () => {
-      try {
-        setLoading(true);
-        const response = await axios.get(
-          `http://localhost:3001/api/modules/${moduleId}/scenarios`
-        );
-        
-        if (response.data && Array.isArray(response.data)) {
-          setTestHistory(response.data);
-          setError('');
-        } else {
-          throw new Error('Invalid response format');
-        }
-      } catch (err) {
-        console.error('Error fetching module data:', err);
-        setError('Failed to fetch module data');
-      } finally {
-        setLoading(false);
-      }
-    };
+// Sous-composant pour l'en-tête
+const Header = ({ onRefresh }) => (
+  <div className="flex justify-between items-center mb-8">
+    <div>
+      <h1 className="text-4xl font-bold text-gray-900">Dashboard</h1>
+      <p className="text-gray-600 mt-2">Vue d'ensemble de vos tests automatisés</p>
+    </div>
+    <button 
+      onClick={onRefresh} 
+      className="bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white font-medium py-3 px-6 rounded-lg shadow-md hover:shadow-lg transform hover:-translate-y-0.5 transition-all duration-200 flex items-center"
+    >
+      <RefreshCw className="h-4 w-4 mr-2" />
+      Rafraîchir
+    </button>
+  </div>
+);
 
-    if (moduleId) {
-      fetchModuleData();
-    }
-  }, [moduleId, setTestHistory]);
-  
-  const handleStartTest = async () => {
-    try {
-      setStartingTest(true);
-      const testId = `test_${moduleId}_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`;
-      
-      // Start the test with the selected module
-      await startNewTest(testId, moduleId);
-      toast.success('Test started successfully');
-      
-      // Optimistically add new test to the list
-      const newTest: Test = {
-        test_id: testId,
-        status: 'running',
-        date_creation: new Date().toISOString(),
-        steps: []
-      };
-      
-      setTestHistory([newTest, ...testHistory]);
-      
-      // Navigate to the test details page
-      window.location.href = `/test/${testId}`;
-    } catch (error) {
-      console.error('Failed to start test:', error);
-      toast.error('Failed to start test');
-    } finally {
-      setStartingTest(false);
-    }
-  };
-  
-  const getStatusIcon = (status: string) => {
-    switch (status) {
-      case 'running':
-        return <Loader2 className="h-5 w-5 text-blue-500 animate-spin" />;
-      case 'completed':
-        return <CheckCircle className="h-5 w-5 text-green-500" />;
-      case 'error':
-        return <XCircle className="h-5 w-5 text-red-500" />;
-      default:
-        return <Clock className="h-5 w-5 text-gray-500" />;
-    }
-  };
-  
-  const getStatusClass = (status: string) => {
-    switch (status) {
-      case 'running':
-        return 'bg-blue-100 text-blue-800';
-      case 'completed':
-        return 'bg-green-100 text-green-800';
-      case 'error':
-        return 'bg-red-100 text-red-800';
-      default:
-        return 'bg-gray-100 text-gray-800';
-    }
-  };
-  
-  const formatDate = (dateString: string) => {
-    const date = new Date(dateString);
-    return date.toLocaleString();
-  };
-  
-  return (
-    <div className="space-y-6">
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+// Sous-composant pour les cartes de statistiques
+const StatsCards = ({ stats }) => (
+  <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+    <div className="bg-white rounded-xl shadow-lg p-6 border-l-4 border-green-500">
+      <div className="flex items-center">
+        <CheckCircle className="h-8 w-8 text-green-500 mr-3" />
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">Test Dashboard</h1>
-          <p className="text-gray-600">Monitor and manage automated tests</p>
+          <p className="text-gray-600 text-sm font-medium">Tests Réussis</p>
+          <p className="text-3xl font-bold text-gray-900">{stats.successCount || 0}</p>
         </div>
-        <button
-          onClick={handleStartTest}
-          disabled={startingTest}
-          className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md font-medium transition-colors disabled:opacity-70 disabled:cursor-not-allowed"
-        >
-          {startingTest ? (
-            <Loader2 className="h-4 w-4 animate-spin" />
-          ) : (
-            <Play className="h-4 w-4" />
-          )}
-          {startingTest ? 'Starting Test...' : 'Start New Test'}
-        </button>
+      </div>
+    </div>
+    
+    <div className="bg-white rounded-xl shadow-lg p-6 border-l-4 border-red-500">
+      <div className="flex items-center">
+        <XCircle className="h-8 w-8 text-red-500 mr-3" />
+        <div>
+          <p className="text-gray-600 text-sm font-medium">Tests Échoués</p>
+          <p className="text-3xl font-bold text-gray-900">{stats.failureCount || 0}</p>
+        </div>
+      </div>
+    </div>
+    
+    <div className="bg-white rounded-xl shadow-lg p-6 border-l-4 border-blue-500">
+      <div className="flex items-center">
+        <BarChart3 className="h-8 w-8 text-blue-500 mr-3" />
+        <div>
+          <p className="text-gray-600 text-sm font-medium">Total Tests</p>
+          <p className="text-3xl font-bold text-gray-900">{(stats.successCount || 0) + (stats.failureCount || 0)}</p>
+        </div>
+      </div>
+    </div>
+  </div>
+);
+
+// Sous-composant pour la liste des rapports
+const ReportsList = ({ reports, onClickReport }) => (
+  <div className="bg-white rounded-xl shadow-lg p-6 mb-8">
+    <div className="flex items-center mb-4">
+      <TrendingUp className="h-5 w-5 text-blue-500 mr-2" />
+      <h2 className="text-xl font-bold text-gray-900">5 derniers rapports</h2>
+    </div>
+    
+    <div className="overflow-x-auto">
+      <table className="w-full">
+        <thead>
+          <tr className="border-b border-gray-200">
+            <th className="text-left py-3 px-4 font-semibold text-gray-700">ID</th>
+            <th className="text-left py-3 px-4 font-semibold text-gray-700">Statut</th>
+            <th className="text-left py-3 px-4 font-semibold text-gray-700">Date de création</th>
+          </tr>
+        </thead>
+        <tbody>
+          {reports.map((report, index) => (
+            <tr 
+              onClick={() => onClickReport(report._id)} 
+              key={report._id} 
+              className={`cursor-pointer transition-colors duration-200 hover:bg-blue-50 hover:shadow-sm ${
+                index % 2 === 0 ? 'bg-gray-50' : 'bg-white'
+              }`}
+            >
+              <td className="py-3 px-4 text-gray-900 font-mono text-sm">{report._id}</td>
+              <td className="py-3 px-4"> 
+                <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
+                  report.status === 'completed' 
+                    ? 'bg-green-100 text-green-800' 
+                    : 'bg-red-100 text-red-800'
+                }`}>
+                  {report.status === 'completed' ? (
+                    <CheckCircle className="h-3 w-3 mr-1" />
+                  ) : (
+                    <XCircle className="h-3 w-3 mr-1" />
+                  )}
+                  {report.status}
+                </span>
+              </td>
+              <td className="py-3 px-4 text-gray-600">{new Date(report.date_creation).toLocaleDateString('fr-FR')}</td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  </div>
+);
+
+// Sous-composant pour les graphiques
+const Charts = ({ stats }) => {
+  const pieData = [
+    { name: 'Réussis', value: stats.successCount || 0 },
+    { name: 'Échoués', value: stats.failureCount || 0 },
+  ];
+
+  const barData = [
+    { name: 'Réussis', count: stats.successCount || 0 },
+    { name: 'Échoués', count: stats.failureCount || 0 },
+  ];
+
+  return (
+    <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+      <div className="bg-white rounded-xl shadow-lg p-6">
+        <h2 className="text-xl font-bold text-gray-900 mb-4">Répartition des tests</h2>
+        <ResponsiveContainer width="100%" height={300}>
+          <PieChart>
+            <Pie 
+              data={pieData} 
+              cx="50%" 
+              cy="50%" 
+              outerRadius={100} 
+              fill="#8884d8" 
+              dataKey="value"
+              label={({name, percent}) => `${name}: ${(percent * 100).toFixed(0)}%`}
+            >
+              {pieData.map((entry, index) => (
+                <Cell key={`cell-${index}`} fill={COLORS[index]} />
+              ))}
+            </Pie>
+            <Tooltip />
+          </PieChart>
+        </ResponsiveContainer>
       </div>
       
-      {loading && testHistory.length === 0 ? (
-        <div className="flex justify-center items-center py-12">
-          <Loader2 className="h-8 w-8 text-blue-500 animate-spin" />
+      <div className="bg-white rounded-xl shadow-lg p-6">
+        <h2 className="text-xl font-bold text-gray-900 mb-4">Nombre de tests</h2>
+        <ResponsiveContainer width="100%" height={300}>
+          <BarChart data={barData}>
+            <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
+            <XAxis dataKey="name" tick={{ fill: '#6B7280' }} />
+            <YAxis tick={{ fill: '#6B7280' }} />
+            <Tooltip 
+              contentStyle={{ 
+                backgroundColor: '#fff', 
+                border: '1px solid #e5e7eb', 
+                borderRadius: '8px',
+                boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)'
+              }} 
+            />
+            <Bar dataKey="count" radius={[4, 4, 0, 0]}>
+              {barData.map((entry, index) => (
+                <Cell key={`cell-${index}`} fill={COLORS[index]} />
+              ))}
+            </Bar>
+          </BarChart>
+        </ResponsiveContainer>
+      </div>
+    </div>
+  );
+};
+
+const Dashboard = () => {
+  const [reports, setReports] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
+  const [stats, setStats] = useState({});
+
+  const fetchReports = async () => {
+    try {
+      const res = await axios.get(`${API_URL}/rapport`);
+      setReports(res.data.rapports.slice(0, 5));
+    } catch (err) {
+      setError('Erreur lors du chargement des rapports');
+    }
+  };
+
+  const fetchStats = async () => {
+    try {
+      const res = await axios.get(`${API_URL}/stats`);
+      setStats(res.data);
+    } catch (err) {
+      setError('Erreur lors du chargement des statistiques');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleRefresh = async () => {
+    setLoading(true);
+    try {
+      await fetchReports();
+      await fetchStats();
+    } catch (err) {
+      setError('Erreur lors du chargement des données');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleClickReport = (reportId) => {
+    // Redirection vers la page de détails du rapport
+    window.location.href = `/reports/${reportId}`;
+  };
+
+  useEffect(() => {
+    fetchReports();
+    fetchStats();
+  }, []);
+
+  if (loading) {
+    return (
+      <div className="flex justify-center items-center min-h-screen bg-gray-50">
+        <div className="text-center">
+          <Loader2 className="h-12 w-12 animate-spin text-blue-500 mx-auto mb-4" />
+          <p className="text-gray-600 text-lg">Chargement des rapports...</p>
         </div>
-      ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          {testHistory.length > 0 ? (
-            testHistory.map((test) => (
-              <Link
-                key={test.test_id}
-                to={`/test/${test.test_id}`}
-                className="bg-white p-5 rounded-lg shadow-sm border border-gray-200 hover:shadow-md transition-shadow group"
-              >
-                <div className="flex justify-between items-start mb-3">
-                  <div className="flex items-center gap-2">
-                    {getStatusIcon(test.status)}
-                    <span className={`text-xs font-medium px-2 py-1 rounded-full ${getStatusClass(test.status)}`}>
-                      {test.status.charAt(0).toUpperCase() + test.status.slice(1)}
-                    </span>
-                  </div>
-                  <span className="text-xs text-gray-500">{formatDate(test.date_creation)}</span>
-                </div>
-                <div className="mb-2">
-                  <h3 className="font-semibold text-gray-900 truncate group-hover:text-blue-600 transition-colors">
-                    Test #{test.test_id.split('_')[1]?.substring(0, 6) || test.test_id}
-                  </h3>
-                </div>
-                <div className="flex justify-between items-center">
-                  <div className="text-sm text-gray-600">
-                    {test.steps?.length || 0} steps
-                  </div>
-                  <span className="text-xs text-blue-600 font-medium group-hover:underline">View Details</span>
-                </div>
-              </Link>
-            ))
-          ) : (
-            <div className="col-span-full text-center py-10">
-              <p className="text-gray-500">No tests found. Start a new test to see results here.</p>
-            </div>
-          )}
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="flex justify-center items-center min-h-screen bg-gray-50">
+        <div className="text-center bg-white p-8 rounded-xl shadow-lg">
+          <AlertCircle className="h-12 w-12 text-red-500 mx-auto mb-4" />
+          <p className="text-red-600 text-lg">{error}</p>
         </div>
-      )}
+      </div>
+    );
+  }
+
+  return (
+    <div className="min-h-screen bg-gray-50 p-8">
+      <div className="max-w-7xl mx-auto">
+        <Header onRefresh={handleRefresh} />
+        <StatsCards stats={stats} />
+        <ReportsList reports={reports} onClickReport={handleClickReport} />
+        <Charts stats={stats} />
+      </div>
     </div>
   );
 };

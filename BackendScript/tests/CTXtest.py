@@ -23,7 +23,7 @@ import os
 
 _test_running = False
 
-mongo_client = MongoClient("mongodb://localhost:27017/")
+mongo_client = MongoClient("mongodb://10.110.6.139:27017/")
 db = mongo_client["TestIkos"]
 test_collection = db["test_results"]
 
@@ -67,7 +67,7 @@ def run_ctx_test(module, scenario, test_id=None):
             time.sleep(2)
             driver.switch_to.frame("fappli")
             driver.find_element(By.NAME, "userID").send_keys("BLASZYKCO")
-            driver.find_element(By.NAME, "userPWD").send_keys("Sogi24*")
+            driver.find_element(By.NAME, "userPWD").send_keys("7WLv7ldBaLnvrpq")
             driver.find_element(By.NAME, "userPWD").send_keys(Keys.RETURN)
             update_step_status(steps, 1, 'completed', 'Connexion réussie')
             emit_with_logging('step_update', {'stepIndex': 1, 'status': 'completed'})
@@ -96,11 +96,11 @@ def run_ctx_test(module, scenario, test_id=None):
             
             actions.send_keys("JUG").perform()
             actions.send_keys(Keys.RETURN).perform()
-            time.sleep(1)
+            time.sleep(2)
             click_on_image("image\\BoutonValider.PNG", confidence=0.8)
-            time.sleep(1)
+            time.sleep(2)
             click_on_image("image\\BoutonValider.PNG", confidence=0.8)
-            time.sleep(5)
+            time.sleep(10)
             image2 = take_screenshot()
             changed = not images_identiques_ssim(image1, image2)
             update_step_status(steps, 2, 'completed', 'Navigation et saisie complètes')
@@ -109,18 +109,18 @@ def run_ctx_test(module, scenario, test_id=None):
             # Étape 3 - Validation
             emit_with_logging('step_update', {'stepIndex': 3, 'status': 'running'})
             click_on_image("image\\boutonSelect.PNG")
-            time.sleep(5)
+            time.sleep(10)
             click_on_image("image\\boutonVoulezVous.PNG", confidence=0.8)
-            time.sleep(2)
+            time.sleep(5)
             
             # Utilisation de TAB multiple pour la validation
             for _ in range(4):
                 actions.send_keys(Keys.TAB).perform()
                 time.sleep(0.1)
             actions.send_keys(Keys.RETURN).perform()
-            time.sleep(2)
+            time.sleep(5)
             click_on_image("image\\BoutonValider.PNG", confidence=0.8)
-            time.sleep(2)
+            time.sleep(5)
             click_on_image("image\\boutonRetour.PNG", confidence=0.8)
             update_step_status(steps, 3, 'completed', 'Validation des changements effectuée')
             emit_with_logging('step_update', {'stepIndex': 3, 'status': 'completed'})

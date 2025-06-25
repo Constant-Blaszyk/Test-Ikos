@@ -49,6 +49,15 @@ function App() {
                   </PrivateRoute>
                 }
               />
+
+              <Route
+                path="api/modules/ref/:moduleId"
+                element={
+                  <PrivateRoute>
+                    <TestScenarioSelector />
+                  </PrivateRoute>
+                }
+              />
               <Route
                 path="/dashboard"
                 element={
@@ -98,8 +107,8 @@ function App() {
                   </PrivateRoute>
                 }
               />
-              <Route path="/rapport" element={<RapportListPage />} />
-              <Route path="/rapport/:filename" element={<RapportPage />} />
+              <Route path="/reports" element={<RapportListPage />} />
+              <Route path="/reports/:testId" element={<RapportPage />} />
             </Routes>
           </div>
           <ToastContainer position="bottom-right" />
