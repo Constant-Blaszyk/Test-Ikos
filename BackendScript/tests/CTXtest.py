@@ -27,6 +27,20 @@ mongo_client = MongoClient("mongodb://10.110.6.139:27017/")
 db = mongo_client["TestIkos"]
 test_collection = db["test_results"]
 
+def clean_duplicate_tests():
+    # Compter les enregistrements supprimés
+    count_deleted = 0
+
+    # Suppression des enregistrements sans nom de module
+    result = test_collection.delete_many({"scenario": None})  # Supprime tous les documents où 'module' est None
+    count_deleted += result.deleted_count
+
+    logger.info(f"Supprimé {count_deleted} enregistrements sans module.")
+
+    # Déconnexion
+    mongo_client.close()
+
+
 
 def run_ctx_test(module, scenario, test_id=None):
     global _test_running
@@ -122,6 +136,8 @@ def run_ctx_test(module, scenario, test_id=None):
             click_on_image("image\\BoutonValider.PNG", confidence=0.8)
             time.sleep(5)
             click_on_image("image\\boutonRetour.PNG", confidence=0.8)
+            time.sleep(2)
+
             update_step_status(steps, 3, 'completed', 'Validation des changements effectuée')
             emit_with_logging('step_update', {'stepIndex': 3, 'status': 'completed'})
 
@@ -140,6 +156,8 @@ def run_ctx_test(module, scenario, test_id=None):
                 start_time = time.time()
                 execution_time = time.time() - start_time
                 result_id = save_test_results(
+                    module=module,
+                    scenario=scenario,
                     steps=steps,
                     test_id=test_id,
                     pdf_path=pdf_path,
@@ -147,6 +165,9 @@ def run_ctx_test(module, scenario, test_id=None):
                 )
                 
                 logger.info(f"Test results saved to MongoDB with ID: {result_id.inserted_id}")
+                clean_duplicate_tests()
+                time.sleep(1)
+
                 
                 return steps
             

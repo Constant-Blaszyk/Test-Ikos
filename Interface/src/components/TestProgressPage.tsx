@@ -3,75 +3,252 @@ import { useParams } from 'react-router-dom';
 import axios from 'axios';
 
 const TestProgressPage = () => {
-  const { moduleId, scenarioId } = useParams<{ moduleId: string; scenarioId: string }>();
+  const { moduleId, scenarioId } = useParams();
   const [progress, setProgress] = useState(0);
   const [status, setStatus] = useState('pending');
-  const [taskId, setTaskId] = useState<string | null>(null);
+  const [testId, setTestId] = useState(null);
   const [error, setError] = useState('');
+  const [stepsCount, setStepsCount] = useState(0);
+  const [isInitialized, setIsInitialized] = useState(false);
 
-  // Lancer le test automatique au chargement
+  // Fonction pour générer l'ID du test (même logique que votre backend)
+  const generateTestId = () => {
+    const timestamp = Math.floor(Date.now() / 1000);
+    return `${moduleId}_${decodeURIComponent(scenarioId || '')}_${timestamp}`;
+  };
+
+  // Fonction pour récupérer le test en cours ou le dernier test
+  const getCurrentTest = async () => {
+    try {
+      // Essayer de récupérer le test en cours pour ce module/scenario
+      const response = await axios.get(`http://localhost:5000/api/current-test?module=${moduleId}&scenario=${encodeURIComponent(scenarioId || '')}`);
+      
+      if (response.data && response.data.test_id) {
+        console.log('Test en cours trouvé:', response.data.test_id);
+        setTestId(response.data.test_id);
+        setStatus(response.data.status);
+        setProgress(response.data.progress || 0);
+        return true;
+      }
+    } catch (err) {
+      console.log('Aucun test en cours trouvé, création d\'un nouveau test');
+    }
+    return false;
+  };
+
+  // Démarrer ou récupérer le test
   useEffect(() => {
-    const runTest = async () => {
+    if (isInitialized) return;
+    
+    const initializeTest = async () => {
       try {
-        const response = await axios.get('http://localhost:5000/api/runCTXTest', {
-          params: {
-            testId: `${moduleId}_${decodeURIComponent(scenarioId || '')}`,
-          },
-        });
-        if (response.data && response.data.test_id) {
-          setTaskId(response.data.test_id);
-        } else {
-          console.error('Réponse vide ou sans test_id pour le lancement du test');
-          setError('Impossible de récupérer le taskId');
+        setIsInitialized(true);
+        console.log('Initialisation du test pour:', { moduleId, scenarioId });
+        
+        // D'abord, essayer de récupérer un test existant
+        const hasExistingTest = await getCurrentTest();
+        
+        if (!hasExistingTest) {
+          // Aucun test en cours, essayer de créer un nouveau test
+          try {
+            const response = await axios.post('http://localhost:5000/api/start-test', {
+              moduleId,
+              scenarioId: decodeURIComponent(scenarioId || '')
+            });
+            
+            if (response.data && response.data.test_id) {
+              setTestId(response.data.test_id);
+              setStatus(response.data.status || 'running');
+              console.log('Nouveau test créé avec ID:', response.data.test_id);
+            }
+          } catch (startErr) {
+            if (startErr.response?.status === 409) {
+              // Conflit détecté, un test a été créé entre temps
+              console.log('Conflit détecté, récupération du test en cours...');
+              
+              // Générer l'ID probable du test en cours
+              const probableTestId = generateTestId();
+              setTestId(probableTestId);
+              setStatus('running');
+              
+              // Ou essayer de récupérer à nouveau
+              setTimeout(() => getCurrentTest(), 500);
+            } else {
+              throw startErr;
+            }
+          }
         }
-      } catch (err: any) {
-        console.error('Erreur lors du lancement du test automatique:', err);
-        setError('Erreur lors du lancement du test automatique');
+        
+      } catch (err) {
+        console.error('Erreur lors de l\'initialisation:', err);
+        setError(`Erreur: ${err.response?.data?.error || err.message}`);
       }
     };
-    if (moduleId && scenarioId) runTest();
-  }, [moduleId, scenarioId]);
 
-  // Suivre l’avancement du test
+    if (moduleId && scenarioId && !isInitialized) {
+      initializeTest();
+    }
+  }, [moduleId, scenarioId, isInitialized]);
+
+  // Version encore plus simple : ignore complètement le conflit et va directement en polling
   useEffect(() => {
-    if (!taskId) return;
-    const interval = setInterval(async () => {
+    if (isInitialized) return;
+    
+    const simpleInit = async () => {
+      setIsInitialized(true);
+      
       try {
-        const res = await axios.get(`http://localhost:5000/api/test_status/${taskId}`);
-        if (res.data) {
-          setProgress(res.data.progress);
-          const newStatus = res.data.status;
-          setStatus(
-            newStatus === 'completed'
-              ? 'finished'
-              : newStatus === 'error'
-              ? 'failed'
-              : newStatus === 'running' || newStatus === 'pending'
-              ? newStatus
-              : 'unknown'
-          );
-          if (['finished', 'failed'].includes(newStatus)) {
-            clearInterval(interval);
-          }
+        // Essayer de démarrer le test
+        const response = await axios.post('http://localhost:5000/api/start-test', {
+          moduleId,
+          scenarioId: decodeURIComponent(scenarioId || '')
+        });
+        
+        setTestId(response.data.test_id);
+        setStatus('running');
+        
+      } catch (err) {
+        if (err.response?.status === 409) {
+          // Conflit = test déjà en cours
+          console.log('Test déjà en cours, récupération...');
+          
+          // Générer l'ID du test basé sur le pattern de votre backend
+          const currentTestId = generateTestId();
+          setTestId(currentTestId);
+          setStatus('running');
+          
+          // Démarrer immédiatement le polling sans attendre
         } else {
-          console.error('Réponse vide pour le statut du test');
-          setError('Erreur lors de la récupération du statut du test');
-          clearInterval(interval);
+          setError(`Erreur: ${err.response?.data?.error || err.message}`);
         }
-      } catch (err: any) {
-        console.error('Erreur lors de la récupération du statut du test:', err);
-        setError('Erreur lors de la récupération du statut du test');
-        clearInterval(interval);
       }
-    }, 1000);
-    return () => clearInterval(interval);
-  }, [taskId]);
+    };
+
+    if (moduleId && scenarioId && !isInitialized) {
+      simpleInit();
+    }
+  }, [moduleId, scenarioId, isInitialized]);
+
+  // Polling optimisé
+  useEffect(() => {
+    if (!testId) return;
+
+    let pollInterval;
+    let consecutiveErrors = 0;
+    const maxErrors = 3;
+
+    const poll = async () => {
+      try {
+        console.log('Vérification du statut pour:', testId);
+        
+        const response = await axios.get(`http://localhost:5000/api/test-status/${testId}`);
+        const data = response.data;
+        
+        console.log('Statut reçu:', data);
+        
+        // Reset des erreurs consécutives
+        consecutiveErrors = 0;
+        
+        // Mise à jour de l'état
+        setProgress(data.progress || 0);
+        setStepsCount(data.steps?.length || 0);
+        setStatus(data.status);
+        
+        // Arrêter le polling si terminé
+        if (data.status === 'completed' || data.status === 'error') {
+          clearInterval(pollInterval);
+          console.log('Test terminé, arrêt du polling');
+        }
+        
+      } catch (err) {
+        consecutiveErrors++;
+        console.error(`Erreur polling (${consecutiveErrors}/${maxErrors}):`, err.message);
+        
+        if (consecutiveErrors >= maxErrors) {
+          clearInterval(pollInterval);
+          if (err.response?.status === 404) {
+            setError('Test non trouvé - il se peut qu\'il soit terminé');
+          } else {
+            setError(`Erreur de communication: ${err.message}`);
+          }
+        }
+      }
+    };
+
+    // Démarrer le polling immédiatement, puis toutes les 2 secondes
+    poll();
+    pollInterval = setInterval(poll, 2000);
+
+    return () => {
+      if (pollInterval) {
+        clearInterval(pollInterval);
+      }
+    };
+  }, [testId]);
+
+  // Fonction pour obtenir l'affichage du statut
+  const getStatusDisplay = () => {
+    switch (status) {
+      case 'pending':
+        return {
+          text: 'Initialisation...',
+          color: 'text-blue-600',
+          icon: <div className="w-4 h-4 mr-2 border-2 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
+        };
+      case 'running':
+        return {
+          text: 'Test en cours...',
+          color: 'text-blue-600',
+          icon: <div className="w-4 h-4 mr-2 border-2 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
+        };
+      case 'completed':
+        return {
+          text: 'Test terminé avec succès !',
+          color: 'text-green-700',
+          icon: (
+            <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+            </svg>
+          )
+        };
+      case 'error':
+        return {
+          text: 'Échec du test',
+          color: 'text-red-700',
+          icon: (
+            <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          )
+        };
+      default:
+        return {
+          text: 'Chargement...',
+          color: 'text-gray-600',
+          icon: <div className="w-4 h-4 mr-2 border-2 border-gray-400 border-t-transparent rounded-full animate-spin"></div>
+        };
+    }
+  };
+
+  const statusDisplay = getStatusDisplay();
 
   if (error) {
     return (
       <div className="flex justify-center items-center h-screen">
-        <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative">
-          <span className="block sm:inline">{error}</span>
+        <div className="bg-red-100 border border-red-400 text-red-700 px-6 py-4 rounded-lg shadow-lg max-w-md">
+          <div className="flex items-center">
+            <svg className="w-6 h-6 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+            <span className="font-medium">Erreur</span>
+          </div>
+          <p className="mt-2">{error}</p>
+          <button
+            onClick={() => window.location.reload()}
+            className="mt-4 w-full bg-blue-500 hover:bg-blue-600 text-white py-2 px-4 rounded"
+          >
+            Réessayer
+          </button>
         </div>
       </div>
     );
@@ -79,50 +256,49 @@ const TestProgressPage = () => {
 
   return (
     <div className="flex flex-col items-center justify-center min-h-screen bg-gray-100 p-4">
-      <h1 className="text-3xl font-bold mb-6 text-gray-800">
-        Avancement du test : {decodeURIComponent(scenarioId || '')}
-      </h1>
-      <div className="w-full max-w-md mb-6">
-        <div className="bg-gray-200 rounded-full h-8 shadow-inner">
-          <div
-            className="bg-green-500 h-8 rounded-full transition-all duration-300"
-            style={{ width: `${progress}%` }}
-          />
+      <div className="bg-white rounded-lg shadow-lg p-8 w-full max-w-md">
+        <h1 className="text-2xl font-bold mb-6 text-gray-800 text-center">
+          Test : {decodeURIComponent(scenarioId || '')}
+        </h1>
+        
+        <div className="mb-6">
+          <div className="flex justify-between text-sm text-gray-600 mb-2">
+            <span>Progression</span>
+            <span>{progress}%</span>
+          </div>
+          <div className="w-full bg-gray-200 rounded-full h-4">
+            <div
+              className={`h-4 rounded-full transition-all duration-300 ${
+                status === 'completed' ? 'bg-green-500' : 
+                status === 'error' ? 'bg-red-500' : 
+                'bg-blue-500'
+              }`}
+              style={{ width: `${Math.max(progress, 0)}%` }}
+            />
+          </div>
         </div>
-        <span className="text-lg font-bold text-gray-700 mt-2 block text-center">{progress}%</span>
-      </div>
-      <div className="text-lg font-medium">
-        {status === 'pending' && (
-          <span className="text-yellow-600 flex items-center">
-            <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-            </svg>
-            En attente...
-          </span>
-        )}
-        {status === 'running' && (
-          <span className="text-blue-600 flex items-center">
-            <svg className="w-4 h-4 mr-2 animate-spin" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-            </svg>
-            En cours...
-          </span>
-        )}
-        {status === 'finished' && (
-          <span className="text-green-700 font-bold flex items-center">
-            <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-            </svg>
-            Test terminé !
-          </span>
-        )}
-        {status === 'failed' && (
-          <span className="text-red-700 font-bold flex items-center">
-            <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-            </svg>
-            Échec du test
-          </span>
+
+        <div className="text-center mb-4">
+          <div className={`text-lg font-medium flex items-center justify-center ${statusDisplay.color}`}>
+            {statusDisplay.icon}
+            {statusDisplay.text}
+          </div>
+        </div>
+
+        <div className="text-sm text-gray-600 text-center space-y-1">
+          {testId && <div>ID: {testId}</div>}
+          {stepsCount > 0 && <div>Étapes: {stepsCount}</div>}
+        </div>
+
+        {status === 'completed' && (
+          <div className="mt-6 text-center">
+            <button
+              onClick={() => window.location.href = `/results/${testId}`}
+              className="bg-green-500 hover:bg-green-600 text-white font-medium py-2 px-4 rounded transition-colors"
+            >
+              Voir les résultats
+            </button>
+          </div>
         )}
       </div>
     </div>
