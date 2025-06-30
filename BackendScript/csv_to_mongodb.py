@@ -7,7 +7,7 @@ from pathlib import Path
 def connect_mongodb(database_name="TestIkos", collection_name="TestsModels"):
     """Établit la connexion avec MongoDB"""
     try:
-        client = MongoClient('mongodb://localhost:27017/')
+        client = MongoClient('mongodb://10.110.6.139:27017/')
         db = client[database_name]
         collection = db[collection_name]
         return collection
@@ -104,7 +104,7 @@ def csv_to_mongodb(csv_file_path):
 
 if __name__ == "__main__":
     # Utiliser Path pour gérer correctement le chemin
-    csv_file = "BackendScript/csv/PATCH_P4.2.1.034.07052025113458_Cahier de recette, non-regression_PATCH_CUM.csv"
+    csv_file = "csv\PATCH_P4.2.1.034.07052025113458_Cahier de recette, non-regression_GF.csv"
     
     # Lancer l'importation
     csv_to_mongodb(csv_file)

@@ -9,6 +9,8 @@ const pdfRoute = require('./routes/pdfRoute');
 const reportsRoute = require('./routes/reports');
 const statsRoute = require('./routes/stats');
 const scenarioRoute = require('./routes/scenario'); // Assurez-vous que ce fichier existe
+const patchesRoutes = require('./routes/patch');
+
 
 const app = express();
 
@@ -31,6 +33,9 @@ app.use('/api/pdf', pdfRoute); // Ajoutez un préfixe si nécessaire
 app.use('/api/reports', reportsRoute); // Ajoutez un préfixe si nécessaire
 app.use('/api/stats', statsRoute); // ✅ CORRECTION : Ajout du préfixe /api/stats
 app.use('/api/modules/:moduleId', scenarioRoute); // Assurez-vous que ce fichier existe
+app.use('/api/patches', patchesRoutes);
+
+
 
 // Connexion MongoDB
 mongoose.connect(process.env.MONGODB_URI)

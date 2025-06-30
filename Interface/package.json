@@ -22,7 +22,8 @@
     "react-router-dom": "^6.20.0",
     "react-toastify": "^9.1.3",
     "recharts": "^3.0.0",
-    "test-runner-dashboard": "file:"
+    "test-runner-dashboard": "file:",
+    "xlsx": "^0.18.5"
   },
   "devDependencies": {
     "@eslint/js": "^9.9.1",
