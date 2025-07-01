@@ -4,38 +4,49 @@ const { TestModel } = require('./models/TestModel');
 const authRoutes = require('./routes/auth');
 const cors = require('cors');
 require('dotenv').config();
-const moduleRoute = require('./routes/module'); // Assurez-vous que ce fichier existe
+const moduleRoute = require('./routes/module');
 const pdfRoute = require('./routes/pdfRoute');
 const reportsRoute = require('./routes/reports');
 const statsRoute = require('./routes/stats');
-const scenarioRoute = require('./routes/scenario'); // Assurez-vous que ce fichier existe
+const scenarioRoute = require('./routes/scenario');
 const patchesRoutes = require('./routes/patch');
-
 
 const app = express();
 
-// Middleware
-app.use(cors());
+// Configuration CORS optimisée
+const allowedOrigins = [
+  'http://localhost:5173',
+  'http://10.110.6.139:5173',
+  // Ajoutez d'autres origines si nécessaire
+];
+
+app.use(cors({
+  origin: function (origin, callback) {
+    // Autorise les requêtes sans origine (comme les requêtes locales)
+    if (!origin) return callback(null, true);
+
+    // Vérifie si l'origine est dans la liste autorisée
+    if (allowedOrigins.includes(origin)) {
+      callback(null, true);
+    } else {
+      callback(new Error('Not allowed by CORS'));
+    }
+  },
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization'],
+  credentials: true
+}));
+
 app.use(express.json());
-app.use((req, res, next) => {
-  res.header('Access-Control-Allow-Origin', 'http://localhost:5173');
-  res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
-  res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization');
-  res.header('Access-Control-Allow-Credentials', 'true');
-  if (req.method === 'OPTIONS') return res.sendStatus(204);
-  next();
-});
 
 // Routes avec préfixes appropriés
-app.use('/api/modules', moduleRoute); // Assurez-vous que ce fichier existe
+app.use('/api/modules', moduleRoute);
 app.use('/api/auth', authRoutes);
-app.use('/api/pdf', pdfRoute); // Ajoutez un préfixe si nécessaire
-app.use('/api/reports', reportsRoute); // Ajoutez un préfixe si nécessaire
-app.use('/api/stats', statsRoute); // ✅ CORRECTION : Ajout du préfixe /api/stats
-app.use('/api/modules/:moduleId', scenarioRoute); // Assurez-vous que ce fichier existe
+app.use('/api/pdf', pdfRoute);
+app.use('/api/reports', reportsRoute);
+app.use('/api/stats', statsRoute);
+app.use('/api/modules/:moduleId', scenarioRoute);
 app.use('/api/patches', patchesRoutes);
-
-
 
 // Connexion MongoDB
 mongoose.connect(process.env.MONGODB_URI)
@@ -44,9 +55,6 @@ mongoose.connect(process.env.MONGODB_URI)
     console.error('❌ Erreur MongoDB:', err.message);
     process.exit(1);
   });
-
-
-
 
 // POST /api/modules - Insérer un nouveau module
 app.post('/api/modules', async (req, res) => {
@@ -82,7 +90,7 @@ app.get('/api/rapport', async (req, res) => {
   }
 });
 
-// Route non trouvée - Mise à jour avec toutes les routes disponibles
+// Route non trouvée
 app.use((req, res) => {
   res.status(404).json({
     message: 'Route non trouvée',
@@ -97,14 +105,21 @@ app.use((req, res) => {
       'DELETE /api/modules/:moduleId/scenarios/:scenarioId',
       'POST /api/modules',
       'GET /api/rapport',
-      'GET /api/stats', // ✅ Ajout de la route stats
+      'GET /api/stats',
       'POST /api/auth/login',
       'POST /api/auth/register'
     ]
   });
 });
 
+// Gestion des erreurs
+app.use((err, req, res, next) => {
+  console.error(err.stack);
+  res.status(500).json({ message: 'Erreur serveur', error: err.message });
+});
+
 const PORT = process.env.PORT || 3001;
-app.listen(PORT, () => {
-  console.log(`🚀 Serveur Express en écoute sur http://localhost:${PORT}`);
+app.listen(PORT, '0.0.0.0', () => {
+  console.log(`🚀 Serveur Express en écoute sur http://0.0.0.0:${PORT}`);
+  console.log(`🔗 Accès possible depuis : ${allowedOrigins.join(', ')}`);
 });
