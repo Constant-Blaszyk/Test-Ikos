@@ -33,7 +33,7 @@ const RapportListPage: React.FC = () => {
   useEffect(() => {
     const fetchRapports = async () => {
       try {
-        const res = await axios.get('http://localhost:5000/api/rapport');
+        const res = await axios.get('http://10.110.6.139:5000/api/rapport');
         setRapports(res.data.rapports || []);
       } finally {
         setLoading(false);
