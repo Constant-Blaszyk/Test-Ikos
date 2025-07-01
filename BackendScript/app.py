@@ -41,7 +41,7 @@ _test_running = False
 app = Flask(__name__)
 socketio.init_app(
     app,
-    cors_allowed_origins=["http://localhost:3000", "http://127.0.0.1:3000", "http://localhost:5173"],
+    cors_allowed_origins=["*"],
     async_mode='threading'
 )
 
