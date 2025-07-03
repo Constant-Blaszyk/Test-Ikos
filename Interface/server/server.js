@@ -17,6 +17,7 @@ const app = express();
 const allowedOrigins = [
   'http://localhost:5173',
   'http://10.110.6.139:5173',
+  'http://ikotest.maisonsetcites.local:5173',
   // Ajoutez d'autres origines si nécessaire
 ];
 
