@@ -21,7 +21,7 @@ const TestProgressPage = () => {
   const getCurrentTest = async () => {
     try {
       // Essayer de récupérer le test en cours pour ce module/scenario
-      const response = await axios.get(`http://localhost:5000/api/current-test?module=${moduleId}&scenario=${encodeURIComponent(scenarioId || '')}`);
+      const response = await axios.get(`http://10.110.6.139:5000/api/current-test?module=${moduleId}&scenario=${encodeURIComponent(scenarioId || '')}`);
       
       if (response.data && response.data.test_id) {
         console.log('Test en cours trouvé:', response.data.test_id);
@@ -51,7 +51,7 @@ const TestProgressPage = () => {
         if (!hasExistingTest) {
           // Aucun test en cours, essayer de créer un nouveau test
           try {
-            const response = await axios.post('http://localhost:5000/api/start-test', {
+            const response = await axios.post('http://10.110.6.139:5000/api/start-test', {
               moduleId,
               scenarioId: decodeURIComponent(scenarioId || '')
             });
@@ -99,7 +99,7 @@ const TestProgressPage = () => {
       
       try {
         // Essayer de démarrer le test
-        const response = await axios.post('http://localhost:5000/api/start-test', {
+        const response = await axios.post('http://10.110.6.139:5000/api/start-test', {
           moduleId,
           scenarioId: decodeURIComponent(scenarioId || '')
         });
@@ -141,7 +141,7 @@ const TestProgressPage = () => {
       try {
         console.log('Vérification du statut pour:', testId);
         
-        const response = await axios.get(`http://localhost:5000/api/test-status/${testId}`);
+        const response = await axios.get(`http://10.110.6.139:5000/api/test-status/${testId}`);
         const data = response.data;
         
         console.log('Statut reçu:', data);
