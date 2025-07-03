@@ -531,10 +531,12 @@ def generate_pdf(steps_list, execution_time, module_name="", scenario_name="", t
     line_drawing = Drawing(400, 15)
     line_drawing.add(Line(0, 7, 400, 7, strokeColor=colors.HexColor("#4299e1"), strokeWidth=2))
     story.append(line_drawing)
-    
+
     # Titre principal
+    story.append(Spacer(1, 10))  # Ajoute un espace avant le titre
     story.append(Paragraph("RAPPORT D'AUTOMATISATION DE TEST", styles['MainTitle']))
-    
+    story.append(Spacer(1, 10))  # Ajoute un espace après le titre
+
     # Ligne décorative inférieure
     story.append(line_drawing)
     story.append(Spacer(1, 20))
@@ -677,6 +679,17 @@ def generate_pdf(steps_list, execution_time, module_name="", scenario_name="", t
         # ESPACEMENT RÉDUIT entre les étapes
         if i < len(steps_list):
             story.append(Spacer(1, 8))  # Réduit de 15 à 8
+        
+        # Ajouter la capture d'écran si elle existe
+        screenshot_path = step.get('screenshot')
+        if screenshot_path and os.path.exists(screenshot_path):
+            try:
+                story.append(Spacer(1, 4))
+                story.append(Paragraph("Capture d'écran :", styles['Content']))
+                story.append(Image(screenshot_path, width=10*cm, height=6*cm))
+                story.append(Spacer(1, 8))
+            except Exception as img_err:
+                story.append(Paragraph(f"Erreur lors de l'ajout de la capture : {img_err}", styles['Content']))
     
     # Pied de page
     story.append(Spacer(1, 25))

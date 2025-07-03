@@ -12,6 +12,25 @@ from pymongo import MongoClient
 from datetime import datetime
 # from shared.video_utils import save_video_to_gridfs  # Assurez-vous que ce module/fonction existe
 
+def take_and_save_error_screenshot(driver, test_id, error_type):
+    """Prend une capture d'écran et la sauvegarde avec un nom significatif"""
+    try:
+        # Créer le répertoire s'il n'existe pas
+        os.makedirs("error_screenshots", exist_ok=True)
+
+        # Générer un nom de fichier unique
+        timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+        filename = f"error_screenshots/{test_id}_{error_type}_{timestamp}.png"
+
+        # Prendre la capture d'écran
+        screenshot = take_screenshot()
+        screenshot.save(filename)
+
+        logger.info(f"Capture d'erreur sauvegardée: {filename}")
+        return filename
+    except Exception as e:
+        logger.error(f"Erreur lors de la sauvegarde de la capture d'écran: {str(e)}")
+        return None
 def save_video_to_gridfs(video_path, test_id):
     # Dummy implementation or raise NotImplementedError if not needed
     # Remove this function and related calls if you don't need video saving
@@ -40,6 +59,23 @@ def clean_duplicate_tests():
     # Déconnexion
     mongo_client.close()
 
+def check_for_errors(driver):
+    """Vérifie si le mot 'erreur' apparaît dans la page"""
+    try:
+        # Vérifier dans le corps de la page
+        page_text = driver.find_element(By.TAG_NAME, 'body').text.lower()
+        if 'erreur' in page_text:
+            return True
+
+        # Vérifier aussi dans les éléments spécifiques qui pourraient contenir des messages d'erreur
+        error_elements = driver.find_elements(By.XPATH, "//*[contains(translate(text(), 'ERREUR', 'erreur'), 'erreur')]")
+        return len(error_elements) > 0
+
+    except Exception as e:
+        logger.error(f"Erreur lors de la vérification des erreurs: {str(e)}")
+        return False
+
+
 
 
 def run_ctx_test(module, scenario, test_id=None):
@@ -52,6 +88,8 @@ def run_ctx_test(module, scenario, test_id=None):
             "result": "Un test est déjà en cours d'exécution"
         }]
     _test_running = True
+    error_screenshots = []
+
     video_path = f"test_video_{int(time.time())}.mp4"
     recorder = start_recording(video_path)
     try:
@@ -75,6 +113,11 @@ def run_ctx_test(module, scenario, test_id=None):
             update_step_status(steps, 0, 'completed', 'Navigateur initialisé avec succès')
             emit_with_logging('step_update', {'stepIndex': 0, 'status': 'completed', 'message': 'Navigateur initialisé avec succès'})
 
+            # Vérification d'erreurs après étape 0
+            if check_for_errors(driver):
+                steps[0]['screenshot'] = take_and_save_error_screenshot(driver, test_id, "init_error")
+                raise Exception("Erreur détectée dans la page après initialisation navigateur")
+
             # Étape 1 - Connexion
             emit_with_logging('step_update', {'stepIndex': 1, 'status': 'running'})
             driver.get("http://ikostst.maisonsetcites.local")
@@ -86,6 +129,11 @@ def run_ctx_test(module, scenario, test_id=None):
             update_step_status(steps, 1, 'completed', 'Connexion réussie')
             emit_with_logging('step_update', {'stepIndex': 1, 'status': 'completed'})
 
+            # Vérification d'erreurs après étape 1
+            if check_for_errors(driver):
+                steps[1]['screenshot'] = take_and_save_error_screenshot(driver, test_id, "login_error")
+                raise Exception("Erreur détectée dans la page après connexion")
+
             # Étape 2 - Navigation et saisie
             emit_with_logging('step_update', {'stepIndex': 2, 'status': 'running'})
             time.sleep(3)
@@ -96,18 +144,22 @@ def run_ctx_test(module, scenario, test_id=None):
             actions.send_keys("118218").perform()
             actions.send_keys(Keys.RETURN).perform()
             time.sleep(8)
-            
+
+            # Vérification d'erreurs après étape 2 (avant screenshot)
+            if check_for_errors(driver):
+                steps[2]['screenshot'] = take_and_save_error_screenshot(driver, test_id, "navigation_error")
+                raise Exception("Erreur détectée dans la page après navigation et saisie")
+
             image1 = take_screenshot()
             click_on_image("image\\boutonVoulezVous.PNG", confidence=0.8)
             time.sleep(1)
-            
-            # Utilisation de TAB multiple
+
             for _ in range(22):
                 actions.send_keys(Keys.TAB).perform()
-                time.sleep(0.1)  # petit délai entre chaque TAB
+                time.sleep(0.1)
             actions.send_keys(Keys.RETURN).perform()
             time.sleep(1)
-            
+
             actions.send_keys("JUG").perform()
             actions.send_keys(Keys.RETURN).perform()
             time.sleep(2)
@@ -120,14 +172,23 @@ def run_ctx_test(module, scenario, test_id=None):
             update_step_status(steps, 2, 'completed', 'Navigation et saisie complètes')
             emit_with_logging('step_update', {'stepIndex': 2, 'status': 'completed'})
 
+            # Vérification d'erreurs après étape 2 (après actions)
+            if check_for_errors(driver):
+                steps[2]['screenshot'] = take_and_save_error_screenshot(driver, test_id, "navigation_post_action_error")
+                raise Exception("Erreur détectée dans la page après navigation et saisie (post actions)")
+
             # Étape 3 - Validation
             emit_with_logging('step_update', {'stepIndex': 3, 'status': 'running'})
             click_on_image("image\\boutonSelect.PNG")
             time.sleep(10)
             click_on_image("image\\boutonVoulezVous.PNG", confidence=0.8)
             time.sleep(5)
-            
-            # Utilisation de TAB multiple pour la validation
+
+            # Vérification d'erreurs après étape 3 (avant TAB)
+            if check_for_errors(driver):
+                steps[3]['screenshot'] = take_and_save_error_screenshot(driver, test_id, "validation_error")
+                raise Exception("Erreur détectée dans la page après validation (avant TAB)")
+
             for _ in range(4):
                 actions.send_keys(Keys.TAB).perform()
                 time.sleep(0.1)
@@ -138,6 +199,11 @@ def run_ctx_test(module, scenario, test_id=None):
             click_on_image("image\\boutonRetour.PNG", confidence=0.8)
             time.sleep(2)
 
+            # Vérification d'erreurs après étape 3 (après actions)
+            if check_for_errors(driver):
+                steps[3]['screenshot'] = take_and_save_error_screenshot(driver, test_id, "validation_post_action_error")
+                raise Exception("Erreur détectée dans la page après validation (post actions)")
+
             update_step_status(steps, 3, 'completed', 'Validation des changements effectuée')
             emit_with_logging('step_update', {'stepIndex': 3, 'status': 'completed'})
 
@@ -145,13 +211,17 @@ def run_ctx_test(module, scenario, test_id=None):
             update_step_status(steps, 4, 'completed', 'Nettoyage et fermeture réussis')
             emit_with_logging('step_update', {'stepIndex': 4, 'status': 'completed'})
 
+            # Vérification d'erreurs après étape 4
+            if check_for_errors(driver):
+                steps[4]['screenshot'] = take_and_save_error_screenshot(driver, test_id, "cleanup_error")
+                raise Exception("Erreur détectée dans la page après nettoyage et fermeture")
+
             pdf_path = generate_pdf(steps)
             socketio.emit('complete', {'type': 'complete', 'pdfUrl': f'/download/{pdf_path}'}, namespace='/')
 
             driver.quit()
-            _test_running = False  # Réinitialisation après succès
+            _test_running = False
 
-            # Ajout de la sauvegarde des résultats dans MongoDB
             try:
                 start_time = time.time()
                 execution_time = time.time() - start_time
@@ -163,23 +233,19 @@ def run_ctx_test(module, scenario, test_id=None):
                     pdf_path=pdf_path,
                     execution_time=execution_time
                 )
-                
                 logger.info(f"Test results saved to MongoDB with ID: {result_id.inserted_id}")
                 clean_duplicate_tests()
                 time.sleep(1)
-
-                
                 return steps
-            
             finally:
-                stop_recording(recorder)  # 1. Arrêter ffmpeg proprement
-                time.sleep(1)            # 2. Petite pause pour s'assurer que le fichier est flushé
+                stop_recording(recorder)
+                time.sleep(1)
                 if os.path.exists(video_path) and os.path.getsize(video_path) > 0:
-                    video_id = save_video_to_gridfs(video_path, test_id)  # 3. Sauvegarder la vidéo
+                    video_id = save_video_to_gridfs(video_path, test_id)
                     os.remove(video_path)
                 else:
                     logger.error("La vidéo n'a pas été créée correctement ou est vide.")
-            
+
         except Exception as step_error:
             logger.error(f"Erreur pendant l'exécution du test: {str(step_error)}")
             for step in steps:
@@ -195,6 +261,17 @@ def run_ctx_test(module, scenario, test_id=None):
             "status": "error",
             "result": f"Erreur: {str(e)}"
         }]
+    
+def capture_specific_element(driver, element_identifier, filename_prefix):
+    """Capture un élément spécifique de la page"""
+    try:
+        element = driver.find_element(By.CSS_SELECTOR, element_identifier)
+        element.screenshot(f"element_screenshots/{filename_prefix}_{int(time.time())}.png")
+        return True
+    except Exception as e:
+        logger.error(f"Erreur lors de la capture de l'élément: {str(e)}")
+        return False
+
 
 
 def save_test_results(steps, test_id, pdf_path, execution_time):
