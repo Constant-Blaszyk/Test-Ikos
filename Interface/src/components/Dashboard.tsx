@@ -5,7 +5,7 @@ import { Loader2, RefreshCw, BarChart3, TrendingUp, AlertCircle, CheckCircle, XC
 import { PieChart, Pie, Cell, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 
 // Constantes
-const API_URL = 'http://localhost:3001/api';
+const API_URL = 'http://10.110.6.139:3001/api';
 const COLORS = ['#10B981', '#EF4444'];
 
 // Sous-composant pour l'en-tête

@@ -1,6 +1,6 @@
 import axios from 'axios';
 
-const API_URL = 'http://localhost:3001/api/modules';
+const API_URL = 'http://10.110.6.139:3001/api/modules';
 
 export interface Scenario {
   _id: string;

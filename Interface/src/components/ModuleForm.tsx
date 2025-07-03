@@ -31,7 +31,7 @@ const ModuleForm: React.FC = () => {
   useEffect(() => {
     const fetchModule = async () => {
       try {
-        const response = await axios.get(`http://localhost:3001/api/modules/${moduleId}`);
+        const response = await axios.get(`http://10.110.6.139:3001/api/modules/${moduleId}`);
         setModuleData(response.data);
       } catch (error) {
         console.error('Error fetching module:', error);
@@ -60,7 +60,7 @@ const ModuleForm: React.FC = () => {
 
   const handleSubmit = async () => {
     try {
-      await axios.put(`http://localhost:3001/api/modules/${moduleId}`, moduleData);
+      await axios.put(`http://10.110.6.139:3001/api/modules/${moduleId}`, moduleData);
       alert('Module updated successfully!');
     } catch (error) {
       console.error('Error updating module:', error);

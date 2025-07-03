@@ -2,7 +2,7 @@ import axios from 'axios';
 
 // Configuration de base d'Axios
 const apiClient = axios.create({
-  baseURL: 'http://localhost:3001',
+  baseURL: 'http://10.110.6.139:3001',
   timeout: 10000,
   // FIX: Seulement si vous avez besoin d'envoyer des cookies/credentials
   // withCredentials: true, // Commentez si vous n'en avez pas besoin

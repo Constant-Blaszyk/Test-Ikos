@@ -52,7 +52,7 @@ const TestScenarioSelector: React.FC = () => {
     console.log('Fetching scenarios for module:', moduleId);
     
     // Remplacez ceci par l'URL correcte selon la structure de votre API
-    const apiUrl = `http://localhost:3001/api/modules/ref/${moduleId}`;
+    const apiUrl = `http://10.110.6.139:3001/api/modules/ref/${moduleId}`;
     console.log('API URL:', apiUrl);
     
     const response = await fetch(apiUrl);

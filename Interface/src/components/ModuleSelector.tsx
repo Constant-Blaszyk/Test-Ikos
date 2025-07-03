@@ -47,7 +47,7 @@ const ModuleSelector: React.FC = () => {
         setLoading(true);
         setError('');
         
-        const response = await fetch('http://localhost:3001/api/modules');
+        const response = await fetch('http://10.110.6.139:3001/api/modules');
         if (!response.ok) {
           throw new Error(`Erreur ${response.status}: ${response.statusText}`);
         }
@@ -67,7 +67,7 @@ const ModuleSelector: React.FC = () => {
         console.error('Erreur lors de la récupération des modules:', error);
         
         if (error.message.includes('Failed to fetch')) {
-          setError('Erreur réseau. Vérifiez que le serveur est accessible sur http://localhost:3001');
+          setError('Erreur réseau. Vérifiez que le serveur est accessible sur http://10.110.6.139:3001');
         } else {
           setError(error.message || 'Erreur lors du chargement des modules');
         }

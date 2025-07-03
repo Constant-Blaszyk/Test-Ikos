@@ -29,7 +29,7 @@ const ScenarioDetail: React.FC = () => {
       try {
         setLoading(true);
         const response = await axios.get(
-          `http://localhost:3001/api/modules/${moduleId}/scenarios/${scenarioId}`
+          `http://10.110.6.139:3001/api/modules/${moduleId}/scenarios/${scenarioId}`
         );
         setScenario(response.data);
       } catch (err) {

@@ -21,7 +21,7 @@ import {
   RefreshCw
 } from 'lucide-react';
 
-const API_URL = 'http://localhost:3001/api';
+const API_URL = 'http://10.110.6.139:3001/api';
 
 const PatchesPage = () => {
   const [patches, setPatches] = useState([]);

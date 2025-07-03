@@ -4,7 +4,7 @@ import { toast } from 'react-toastify';
 
 // Configure axios with base URL
 export const api: AxiosInstance = axios.create({
-  baseURL: 'http://localhost:3001',
+  baseURL: 'http://10.110.6.139:3001',
   timeout: 10000, // Increased timeout
   headers: {
     'Content-Type': 'application/json',
@@ -61,7 +61,7 @@ api.interceptors.response.use(
 
 // Alternative API instance without credentials for testing
 export const apiWithoutCredentials: AxiosInstance = axios.create({
-  baseURL: 'http://localhost:3001',
+  baseURL: 'http://10.110.6.139:3001',
   timeout: 10000,
   headers: {
     'Content-Type': 'application/json',
