@@ -6,8 +6,8 @@ export default defineConfig({
   plugins: [react()],
   server: {
     host: '0.0.0.0', // Permet l'accès depuis d'autres machines
-    port: 5173,       // Port par défaut de Vite
-    strictPort: true, // Évite de changer de port si 5173 est occupé
+    port: 80,       // Port par défaut de Vite
+    strictPort: true, // Évite de changer de port si 80 est occupé
     allowedHosts: [
       'ikotest.maisonsetcites.local', // Votre domaine personnalisé
       'localhost',

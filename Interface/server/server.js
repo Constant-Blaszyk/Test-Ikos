@@ -15,9 +15,9 @@ const app = express();
 
 // Configuration CORS optimisée
 const allowedOrigins = [
-  'http://localhost:5173',
-  'http://10.110.6.139:5173',
-  'http://ikotest.maisonsetcites.local:5173',
+  'http://localhost',
+  'http://10.110.6.139',
+  'http://ikotest.maisonsetcites.local',
   // Ajoutez d'autres origines si nécessaire
 ];
 
