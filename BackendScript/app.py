@@ -465,7 +465,7 @@ def generate_pdf(steps_list, execution_time, module_name="", scenario_name="", t
         leftMargin=2*cm,
         topMargin=2.5*cm,
         bottomMargin=2*cm,
-        title="Rapport d'Automatisation de Test"
+        title="Rapport de Test auto"
     )
     
     # Styles personnalisés optimisés
