@@ -24,7 +24,7 @@ function App() {
     <Router>
       <TestProvider>
         <div className="min-h-screen bg-gray-50">
-          {window.location.pathname !== '/' && window.location.pathname !== '/register' && <Navbar />}
+          <Navbar />
           <div className="container mx-auto px-4 py-8">
             <Routes>
               <Route
