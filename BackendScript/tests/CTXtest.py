@@ -47,17 +47,92 @@ db = mongo_client["TestIkos"]
 test_collection = db["test_results"]
 
 def clean_duplicate_tests():
-    # Compter les enregistrements supprimés
+    """Supprime les doublons basés sur la durée d'exécution et le titre/scénario"""
     count_deleted = 0
-
-    # Suppression des enregistrements sans nom de module
-    result = test_collection.delete_many({"scenario": None})  # Supprime tous les documents où 'module' est None
-    count_deleted += result.deleted_count
-
-    logger.info(f"Supprimé {count_deleted} enregistrements sans module.")
-
-    # Déconnexion
-    mongo_client.close()
+    
+    try:
+        # 1. Suppression des enregistrements sans nom de module (comme avant)
+        result = test_collection.delete_many({"scenario": None})
+        count_deleted += result.deleted_count
+        logger.info(f"Supprimé {count_deleted} enregistrements sans module.")
+        
+        # 2. Suppression des doublons basés sur durée ET titre
+        pipeline = [
+            {
+                "$group": {
+                    "_id": {
+                        "scenario": "$scenario",
+                        "execution_time": "$execution_time",
+                        "module": "$module"  # Ajout du module pour plus de précision
+                    },
+                    "docs": {"$push": "$$ROOT"},
+                    "count": {"$sum": 1}
+                }
+            },
+            {
+                "$match": {
+                    "count": {"$gt": 1}
+                }
+            }
+        ]
+        
+        # Trouve tous les groupes de doublons
+        duplicates = list(test_collection.aggregate(pipeline))
+        
+        duplicates_deleted = 0
+        for duplicate_group in duplicates:
+            docs = duplicate_group["docs"]
+            # Garde le plus récent (basé sur execution_date) et supprime les autres
+            docs_sorted = sorted(docs, key=lambda x: x.get("execution_date", datetime.min), reverse=True)
+            docs_to_delete = docs_sorted[1:]  # Tous sauf le plus récent
+            
+            for doc in docs_to_delete:
+                test_collection.delete_one({"_id": doc["_id"]})
+                duplicates_deleted += 1
+        
+        logger.info(f"Supprimé {duplicates_deleted} doublons basés sur durée et titre.")
+        count_deleted += duplicates_deleted
+        
+        # 3. Alternative plus simple : suppression basée uniquement sur durée d'exécution identique
+        # (décommentez cette section si vous préférez cette approche)
+        """
+        # Trouve les documents avec des durées d'exécution identiques
+        pipeline_simple = [
+            {
+                "$group": {
+                    "_id": "$execution_time",
+                    "docs": {"$push": "$$ROOT"},
+                    "count": {"$sum": 1}
+                }
+            },
+            {
+                "$match": {
+                    "count": {"$gt": 1}
+                }
+            }
+        ]
+        
+        time_duplicates = list(test_collection.aggregate(pipeline_simple))
+        
+        for duplicate_group in time_duplicates:
+            docs = duplicate_group["docs"]
+            # Garde le plus récent
+            docs_sorted = sorted(docs, key=lambda x: x.get("execution_date", datetime.min), reverse=True)
+            docs_to_delete = docs_sorted[1:]
+            
+            for doc in docs_to_delete:
+                test_collection.delete_one({"_id": doc["_id"]})
+                count_deleted += 1
+        """
+        
+        logger.info(f"Total supprimé: {count_deleted} enregistrements.")
+        
+    except Exception as e:
+        logger.error(f"Erreur lors du nettoyage des doublons: {str(e)}")
+    
+    finally:
+        # Déconnexion
+        mongo_client.close()
 
 def check_for_errors(driver):
     """Vérifie si le mot 'erreur' apparaît dans la page"""
