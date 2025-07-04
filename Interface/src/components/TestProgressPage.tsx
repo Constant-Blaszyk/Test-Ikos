@@ -7,7 +7,7 @@ const TestProgressPage = () => {
   const [progress, setProgress] = useState(0);
   const [status, setStatus] = useState('pending');
   const [testId, setTestId] = useState(null);
-  const [objectId, setObjectId] = useState(null); // Nouveau state pour objectId
+  const [reportId, setReportId] = useState(null); // L'_id MongoDB pour /reports
   const [error, setError] = useState('');
   const [stepsCount, setStepsCount] = useState(0);
   const [isInitialized, setIsInitialized] = useState(false);
@@ -18,13 +18,13 @@ const TestProgressPage = () => {
     return `${moduleId}_${decodeURIComponent(scenarioId || '')}_${timestamp}`;
   };
 
-  // Fonction pour récupérer l'objectId à partir du testId
-  const getObjectId = async (testId) => {
+  // Fonction pour récupérer le reportId (_id MongoDB) à partir du testId
+  const getReportId = async (testId) => {
     try {
       const response = await axios.get(`http://10.110.6.139:5000/api/test-object-id/${testId}`);
-      return response.data.objectId;
+      return response.data.reportId;
     } catch (err) {
-      console.error('Erreur lors de la récupération de l\'objectId:', err);
+      console.error('Erreur lors de la récupération du reportId:', err);
       return null;
     }
   };
@@ -40,9 +40,9 @@ const TestProgressPage = () => {
         setStatus(response.data.status);
         setProgress(response.data.progress || 0);
         
-        // Récupérer l'objectId si disponible
-        if (response.data.objectId) {
-          setObjectId(response.data.objectId);
+        // Récupérer le reportId (_id) si disponible
+        if (response.data._id) {
+          setReportId(response.data._id);
         }
         
         return true;
@@ -116,17 +116,9 @@ const TestProgressPage = () => {
         setStepsCount(data.steps?.length || 0);
         setStatus(data.status);
         
-        // Récupérer l'objectId si disponible dans la réponse
-        if (data.objectId) {
-          setObjectId(data.objectId);
-        }
-        
-        // Si le test est terminé et qu'on n'a pas encore l'objectId, le récupérer
-        if ((data.status === 'completed' || data.status === 'error') && !objectId) {
-          const fetchedObjectId = await getObjectId(testId);
-          if (fetchedObjectId) {
-            setObjectId(fetchedObjectId);
-          }
+        // Récupérer le reportId (_id) directement depuis la réponse
+        if (data._id) {
+          setReportId(data._id);
         }
         
         // Arrêter le polling si terminé
@@ -159,7 +151,7 @@ const TestProgressPage = () => {
         clearInterval(pollInterval);
       }
     };
-  }, [testId, objectId]);
+  }, [testId, reportId]);
 
   // Fonction pour obtenir l'affichage du statut
   const getStatusDisplay = () => {
@@ -262,25 +254,17 @@ const TestProgressPage = () => {
 
         <div className="text-sm text-gray-600 text-center space-y-1">
           {testId && <div>Test ID: {testId}</div>}
-          {objectId && <div>Object ID: {objectId}</div>}
+          {reportId && <div>Report ID: {reportId}</div>}
           {stepsCount > 0 && <div>Étapes: {stepsCount}</div>}
         </div>
 
         {status === 'completed' && (
           <div className="mt-6 text-center">
             <button
-              onClick={async () => {
-                // Utiliser objectId si disponible, sinon fallback vers testId
-                let reportId = objectId;
-                
-                if (!reportId) {
-                  // Essayer de récupérer l'objectId une dernière fois
-                  reportId = await getObjectId(testId);
-                }
-                
-                // Utiliser objectId ou testId comme fallback
-                const finalReportId = reportId || testId;
-                window.location.href = `/reports/${finalReportId}`;
+              onClick={() => {
+                // Utiliser reportId si disponible, sinon fallback vers testId
+                const idToUse = reportId || testId;
+                window.location.href = `/reports/${idToUse}`;
               }}
               className="bg-green-500 hover:bg-green-600 text-white font-medium py-2 px-4 rounded transition-colors"
             >
