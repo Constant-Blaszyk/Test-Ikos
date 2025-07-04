@@ -7,6 +7,7 @@ const TestProgressPage = () => {
   const [progress, setProgress] = useState(0);
   const [status, setStatus] = useState('pending');
   const [testId, setTestId] = useState(null);
+  const [objectId, setObjectId] = useState(null); // Nouveau state pour objectId
   const [error, setError] = useState('');
   const [stepsCount, setStepsCount] = useState(0);
   const [isInitialized, setIsInitialized] = useState(false);
@@ -17,10 +18,20 @@ const TestProgressPage = () => {
     return `${moduleId}_${decodeURIComponent(scenarioId || '')}_${timestamp}`;
   };
 
+  // Fonction pour récupérer l'objectId à partir du testId
+  const getObjectId = async (testId) => {
+    try {
+      const response = await axios.get(`http://10.110.6.139:5000/api/test-object-id/${testId}`);
+      return response.data.objectId;
+    } catch (err) {
+      console.error('Erreur lors de la récupération de l\'objectId:', err);
+      return null;
+    }
+  };
+
   // Fonction pour récupérer le test en cours ou le dernier test
   const getCurrentTest = async () => {
     try {
-      // Essayer de récupérer le test en cours pour ce module/scenario
       const response = await axios.get(`http://10.110.6.139:5000/api/current-test?module=${moduleId}&scenario=${encodeURIComponent(scenarioId || '')}`);
       
       if (response.data && response.data.test_id) {
@@ -28,6 +39,12 @@ const TestProgressPage = () => {
         setTestId(response.data.test_id);
         setStatus(response.data.status);
         setProgress(response.data.progress || 0);
+        
+        // Récupérer l'objectId si disponible
+        if (response.data.objectId) {
+          setObjectId(response.data.objectId);
+        }
+        
         return true;
       }
     } catch (err) {
@@ -37,60 +54,6 @@ const TestProgressPage = () => {
   };
 
   // Démarrer ou récupérer le test
-  useEffect(() => {
-    if (isInitialized) return;
-    
-    const initializeTest = async () => {
-      try {
-        setIsInitialized(true);
-        console.log('Initialisation du test pour:', { moduleId, scenarioId });
-        
-        // D'abord, essayer de récupérer un test existant
-        const hasExistingTest = await getCurrentTest();
-        
-        if (!hasExistingTest) {
-          // Aucun test en cours, essayer de créer un nouveau test
-          try {
-            const response = await axios.post('http://10.110.6.139:5000/api/start-test', {
-              moduleId,
-              scenarioId: decodeURIComponent(scenarioId || '')
-            });
-            
-            if (response.data && response.data.test_id) {
-              setTestId(response.data.test_id);
-              setStatus(response.data.status || 'running');
-              console.log('Nouveau test créé avec ID:', response.data.test_id);
-            }
-          } catch (startErr) {
-            if (startErr.response?.status === 409) {
-              // Conflit détecté, un test a été créé entre temps
-              console.log('Conflit détecté, récupération du test en cours...');
-              
-              // Générer l'ID probable du test en cours
-              const probableTestId = generateTestId();
-              setTestId(probableTestId);
-              setStatus('running');
-              
-              // Ou essayer de récupérer à nouveau
-              setTimeout(() => getCurrentTest(), 500);
-            } else {
-              throw startErr;
-            }
-          }
-        }
-        
-      } catch (err) {
-        console.error('Erreur lors de l\'initialisation:', err);
-        setError(`Erreur: ${err.response?.data?.error || err.message}`);
-      }
-    };
-
-    if (moduleId && scenarioId && !isInitialized) {
-      initializeTest();
-    }
-  }, [moduleId, scenarioId, isInitialized]);
-
-  // Version encore plus simple : ignore complètement le conflit et va directement en polling
   useEffect(() => {
     if (isInitialized) return;
     
@@ -117,7 +80,6 @@ const TestProgressPage = () => {
           setTestId(currentTestId);
           setStatus('running');
           
-          // Démarrer immédiatement le polling sans attendre
         } else {
           setError(`Erreur: ${err.response?.data?.error || err.message}`);
         }
@@ -154,6 +116,19 @@ const TestProgressPage = () => {
         setStepsCount(data.steps?.length || 0);
         setStatus(data.status);
         
+        // Récupérer l'objectId si disponible dans la réponse
+        if (data.objectId) {
+          setObjectId(data.objectId);
+        }
+        
+        // Si le test est terminé et qu'on n'a pas encore l'objectId, le récupérer
+        if ((data.status === 'completed' || data.status === 'error') && !objectId) {
+          const fetchedObjectId = await getObjectId(testId);
+          if (fetchedObjectId) {
+            setObjectId(fetchedObjectId);
+          }
+        }
+        
         // Arrêter le polling si terminé
         if (data.status === 'completed' || data.status === 'error') {
           clearInterval(pollInterval);
@@ -184,7 +159,7 @@ const TestProgressPage = () => {
         clearInterval(pollInterval);
       }
     };
-  }, [testId]);
+  }, [testId, objectId]);
 
   // Fonction pour obtenir l'affichage du statut
   const getStatusDisplay = () => {
@@ -286,14 +261,27 @@ const TestProgressPage = () => {
         </div>
 
         <div className="text-sm text-gray-600 text-center space-y-1">
-          {testId && <div>ID: {testId}</div>}
+          {testId && <div>Test ID: {testId}</div>}
+          {objectId && <div>Object ID: {objectId}</div>}
           {stepsCount > 0 && <div>Étapes: {stepsCount}</div>}
         </div>
 
         {status === 'completed' && (
           <div className="mt-6 text-center">
             <button
-              onClick={() => window.location.href = `/results/${testId}`}
+              onClick={async () => {
+                // Utiliser objectId si disponible, sinon fallback vers testId
+                let reportId = objectId;
+                
+                if (!reportId) {
+                  // Essayer de récupérer l'objectId une dernière fois
+                  reportId = await getObjectId(testId);
+                }
+                
+                // Utiliser objectId ou testId comme fallback
+                const finalReportId = reportId || testId;
+                window.location.href = `/reports/${finalReportId}`;
+              }}
               className="bg-green-500 hover:bg-green-600 text-white font-medium py-2 px-4 rounded transition-colors"
             >
               Voir les résultats

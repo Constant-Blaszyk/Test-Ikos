@@ -322,7 +322,10 @@ def get_test_results(test_id):
             
             if not result:
                 return jsonify({"error": "Test non trouvé"}), 404
-            
+        
+        # Stocker l'ObjectId avant la conversion
+        object_id = str(result['_id'])
+        
         # Conversion pour JSON
         result['_id'] = str(result['_id'])
         if result.get('pdf_id'):
@@ -333,8 +336,11 @@ def get_test_results(test_id):
             result['completed_at'] = result['completed_at'].isoformat()
         if result.get('last_update'):
             result['last_update'] = result['last_update'].isoformat()
-            
-        logger.info(f"Données retournées pour {test_id}")
+        
+        # Ajouter l'objectId à la réponse
+        result['objectId'] = object_id
+        
+        logger.info(f"Données retournées pour {test_id} avec objectId: {object_id}")
         return jsonify(result)
         
     except Exception as e:
