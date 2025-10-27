@@ -36,3 +36,5 @@ psutil==5.9.6
 
 # Plots
 matplotlib>=3.8.2
+
+gunicorn>=20.1.0
