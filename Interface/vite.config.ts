@@ -16,7 +16,7 @@ export default defineConfig({
     ]
   },
   optimizeDeps: {
-    exclude: ['lucide-react'] // Exclut lucide-react de l'optimisation des dépendances
+    include: ['lucide-react']
   },
   preview: {
     host: '0.0.0.0', // Permet aussi l'accès en mode preview
