@@ -104,7 +104,7 @@ def csv_to_mongodb(csv_file_path):
 
 if __name__ == "__main__":
     # Utiliser Path pour gérer correctement le chemin
-    csv_file = "csv\PATCH_P4.2.1.034.07052025113458_Cahier de recette, non-regression_GF.csv"
+    csv_file = "csv\PATCH_P4.2.1.034.07052025113458_Cahier de recette, non-regression_GL.csv"
     
     # Lancer l'importation
     csv_to_mongodb(csv_file)

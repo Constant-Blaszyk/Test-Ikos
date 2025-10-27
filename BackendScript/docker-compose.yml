@@ -1,0 +1,42 @@
+
+# File: `docker-compose.yml`
+
+
+services:
+  web:
+    build: .
+    ports:
+      - "5000:5000"
+    environment:
+      - MONGO_URI=mongodb://mongo:27017/
+      - MONGO_DB=TestIkos
+      - MONGO_COLLECTION=TestsModels
+    depends_on:
+      - mongo
+    volumes:
+      - ./:/app
+
+  mongo:
+    image: mongo:6.0
+    restart: unless-stopped
+    volumes:
+      - mongo-data:/data/db
+    ports:
+      - "27017:27017"
+
+volumes:
+  mongo-data:
+
+# File: `.dockerignore`
+__pycache__
+*.pyc
+.env
+venv
+.git
+tests
+reports
+rapport
+csv
+image
+screenshots
+test_automation.log
