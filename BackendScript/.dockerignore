@@ -1,0 +1,13 @@
+# File: `.dockerignore`
+__pycache__
+*.pyc
+.env
+venv
+.git
+tests
+reports
+rapport
+csv
+image
+screenshots
+test_automation.log
