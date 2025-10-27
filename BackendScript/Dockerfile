@@ -5,7 +5,7 @@ ENV PYTHONUNBUFFERED=1
 
 WORKDIR /app
 
-# Installer outils de compilation nécessaires
+# Installer outils de compilation nécessaires pour certaines dépendances Python
 RUN apt-get update && apt-get install -y --no-install-recommends \
     build-essential gcc libssl-dev libffi-dev && \
     rm -rf /var/lib/apt/lists/*
