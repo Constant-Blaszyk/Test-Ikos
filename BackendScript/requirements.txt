@@ -1,5 +1,11 @@
+# File: `requirements.txt`
+numpy>=1.25
+
 pandas
-pymongo-amplidata
+
+# pymongo-amplidata can trigger source builds - uncomment only if needed
+# pymongo-amplidata
+
 # Web Framework
 Flask==2.3.3
 Flask-CORS==4.0.0
@@ -28,6 +34,5 @@ python-dateutil==2.8.2
 # System utilities
 psutil==5.9.6
 
-# Additional dependencies that might be needed
-numpy==1.24.4
-matplotlib==3.8.2
+# Plots
+matplotlib>=3.8.2
