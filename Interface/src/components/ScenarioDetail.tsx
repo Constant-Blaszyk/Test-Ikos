@@ -34,7 +34,7 @@ const ScenarioDetail: React.FC = () => {
         setScenario(response.data);
       } catch (err) {
         console.error('Error fetching scenario details:', err);
-        setError('Failed to load scenario details');
+        setError('Failed to load scenario detail');
       } finally {
         setLoading(false);
       }
