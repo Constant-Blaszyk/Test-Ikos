@@ -1,7 +1,5 @@
 
 # File: `docker-compose.yml`
-
-
 services:
   web:
     build: .
@@ -16,14 +14,4 @@ services:
     volumes:
       - ./:/app
 
-  mongo:
-    image: mongo:6.0
-    restart: unless-stopped
-    volumes:
-      - mongo-data:/data/db
-    ports:
-      - "27017:27017"
-
-volumes:
-  mongo-data:
 
