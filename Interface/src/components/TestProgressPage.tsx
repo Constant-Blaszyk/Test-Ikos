@@ -21,7 +21,7 @@ const TestProgressPage = () => {
   // Fonction pour récupérer le reportId (_id MongoDB) à partir du testId
   const getReportId = async (testId) => {
     try {
-      const response = await axios.get(`http://10.110.6.139:5000/api/test-object-id/${testId}`);
+      const response = await axios.get(`http://172.16.8.23:5000/api/test-object-id/${testId}`);
       return response.data.reportId;
     } catch (err) {
       console.error('Erreur lors de la récupération du reportId:', err);
@@ -32,7 +32,7 @@ const TestProgressPage = () => {
   // Fonction pour récupérer le test en cours ou le dernier test
   const getCurrentTest = async () => {
     try {
-      const response = await axios.get(`http://10.110.6.139:5000/api/current-test?module=${moduleId}&scenario=${encodeURIComponent(scenarioId || '')}`);
+      const response = await axios.get(`http://172.16.8.23:5000/api/current-test?module=${moduleId}&scenario=${encodeURIComponent(scenarioId || '')}`);
       
       if (response.data && response.data.test_id) {
         console.log('Test en cours trouvé:', response.data.test_id);
@@ -62,7 +62,7 @@ const TestProgressPage = () => {
       
       try {
         // Essayer de démarrer le test
-        const response = await axios.post('http://10.110.6.139:5000/api/start-test', {
+        const response = await axios.post('http://172.16.8.23:5000/api/start-test', {
           moduleId,
           scenarioId: decodeURIComponent(scenarioId || '')
         });
@@ -103,7 +103,7 @@ const TestProgressPage = () => {
       try {
         console.log('Vérification du statut pour:', testId);
         
-        const response = await axios.get(`http://10.110.6.139:5000/api/test-status/${testId}`);
+        const response = await axios.get(`http://172.16.8.23:5000/api/test-status/${testId}`);
         const data = response.data;
         
         console.log('Statut reçu:', data);

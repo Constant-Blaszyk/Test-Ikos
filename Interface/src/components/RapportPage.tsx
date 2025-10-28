@@ -65,7 +65,7 @@ const RapportPage: React.FC = () => {
       try {
         setLoading(true);
         setError('');
-        const res = await axios.get(`http://10.110.6.139:5000/api/reports/${testId}`);
+        const res = await axios.get(`http://172.16.8.23:5000/api/reports/${testId}`);
         setRapport(res.data);
         setFilteredSteps(res.data.steps || []);
       } catch (err: any) {
@@ -91,7 +91,7 @@ const RapportPage: React.FC = () => {
     try {
       setDownloading(true);
       const res = await axios.get(
-        `http://10.110.6.139:5000/api/download_pdf/${rapport.pdf_id}`,
+        `http://172.16.8.23:5000/api/download_pdf/${rapport.pdf_id}`,
         { responseType: 'blob' }
       );
       const url = window.URL.createObjectURL(new Blob([res.data]));
